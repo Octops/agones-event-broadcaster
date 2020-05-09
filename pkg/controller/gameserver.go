@@ -3,18 +3,24 @@ package controller
 import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"context"
+	"fmt"
+	"github.com/Octops/gameserver-events-broadcaster/pkg/events/handlers"
 	"github.com/Octops/gameserver-events-broadcaster/pkg/runtime/log"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 type GameServerController struct {
@@ -22,7 +28,12 @@ type GameServerController struct {
 	manager.Manager
 }
 
-func NewGameServerController(config *rest.Config) (*GameServerController, error) {
+type reconciler struct {
+	client.Client
+	scheme *runtime.Scheme
+}
+
+func NewGameServerController(config *rest.Config, eventHandler handlers.EventHandler) (*GameServerController, error) {
 	logger := log.NewLoggerWithField("source", "GameServerController")
 	mgr, err := manager.New(config, manager.Options{})
 	if err != nil {
@@ -46,6 +57,60 @@ func NewGameServerController(config *rest.Config) (*GameServerController, error)
 			},
 			GenericFunc: func(genericEvent event.GenericEvent) bool {
 				return true
+			},
+		}).
+		Watches(&source.Kind{Type: &agonesv1.GameServer{}}, &handler.Funcs{
+			CreateFunc: func(createEvent event.CreateEvent, limitingInterface workqueue.RateLimitingInterface) {
+				// OnAdd is triggered only when the controller is syncing its cache.
+				// It does not map ot the resource creation event triggered by Kubernetes
+				request := reconcile.Request{
+					NamespacedName: types.NamespacedName{
+						Namespace: createEvent.Meta.GetNamespace(),
+						Name:      createEvent.Meta.GetName(),
+					},
+				}
+
+				defer limitingInterface.Done(request)
+
+				if err := eventHandler.OnAdd(createEvent.Object); err != nil {
+					limitingInterface.AddRateLimited(request)
+					return
+				}
+
+				limitingInterface.Forget(request)
+			},
+			UpdateFunc: func(updateEvent event.UpdateEvent, limitingInterface workqueue.RateLimitingInterface) {
+				request := reconcile.Request{
+					NamespacedName: types.NamespacedName{
+						Namespace: updateEvent.MetaNew.GetNamespace(),
+						Name:      updateEvent.MetaNew.GetName(),
+					},
+				}
+
+				defer limitingInterface.Done(request)
+
+				if err := eventHandler.OnUpdate(updateEvent.ObjectOld, updateEvent.ObjectNew); err != nil {
+					limitingInterface.AddRateLimited(request)
+					return
+				}
+
+				limitingInterface.Forget(request)
+			},
+			DeleteFunc: func(deleteEvent event.DeleteEvent, limitingInterface workqueue.RateLimitingInterface) {
+
+				request := reconcile.Request{
+					NamespacedName: types.NamespacedName{
+						Namespace: deleteEvent.Meta.GetNamespace(),
+						Name:      deleteEvent.Meta.GetName(),
+					},
+				}
+
+				if err := eventHandler.OnDelete(deleteEvent.Object); err != nil {
+					limitingInterface.AddRateLimited(request)
+					return
+				}
+
+				limitingInterface.Forget(request)
 			},
 		}).
 		Complete(&reconciler{
@@ -74,11 +139,6 @@ func (c *GameServerController) Run(stop <-chan struct{}) error {
 	return nil
 }
 
-type reconciler struct {
-	client.Client
-	scheme *runtime.Scheme
-}
-
 func (r *reconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
 
@@ -94,7 +154,8 @@ func (r *reconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) 
 		return reconcile.Result{}, err
 	}
 
-	logrus.Debug(req.NamespacedName, gameServer.Status.State)
+	msg := fmt.Sprintf("OnReconcile: %s - %s", req.NamespacedName, gameServer.Status.State)
+	logrus.Debug(msg)
 
 	return reconcile.Result{}, nil
 }
