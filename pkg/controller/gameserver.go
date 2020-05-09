@@ -139,6 +139,8 @@ func (c *GameServerController) Run(stop <-chan struct{}) error {
 	return nil
 }
 
+// Reconcile is called on every reconcile event. It does not differ between add, update, delete.
+// Its function is purely informative and events are handled back to the broadcaster specific event handlers.
 func (r *reconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
 
