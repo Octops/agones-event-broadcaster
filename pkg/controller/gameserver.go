@@ -3,12 +3,12 @@ package controller
 import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"context"
+	"github.com/Octops/gameserver-events-broadcaster/pkg/runtime/log"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
-	"log"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -22,7 +22,8 @@ type GameServerController struct {
 	manager.Manager
 }
 
-func NewGameServerController(logger *logrus.Entry, config *rest.Config) (*GameServerController, error) {
+func NewGameServerController(config *rest.Config) (*GameServerController, error) {
+	logger := log.NewLoggerWithField("source", "GameServerController")
 	mgr, err := manager.New(config, manager.Options{})
 	if err != nil {
 		return nil, err
@@ -84,15 +85,16 @@ func (r *reconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) 
 	gameServer := &agonesv1.GameServer{}
 	if err := r.Get(ctx, req.NamespacedName, gameServer); err != nil {
 		if apierrors.IsNotFound(err) {
-			log.Println(err)
+			logrus.WithError(err).Error()
 			return ctrl.Result{}, nil
 		}
 
-		log.Println("Error:", err.Error())
+		logrus.WithError(err).Error()
+
 		return reconcile.Result{}, err
 	}
 
-	log.Println(req.NamespacedName, gameServer.Status.State)
+	logrus.Debug(req.NamespacedName, gameServer.Status.State)
 
 	return reconcile.Result{}, nil
 }

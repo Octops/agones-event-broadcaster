@@ -34,26 +34,23 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "gameserver-event-broadcaster",
+	Use:   "gameserver-events-broadcaster",
 	Short: "Broadcast Events from Agones GameServers",
 	Long:  `Broadcast Events from Agones GameServers`,
 	Run: func(cmd *cobra.Command, args []string) {
-		log := logrus.New()
 		if verbose {
-			log.SetLevel(logrus.DebugLevel)
+			logrus.SetLevel(logrus.DebugLevel)
 		}
-
-		logger := logrus.NewEntry(log)
 
 		clientConf, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 
-		broadCaster, err := broadcaster.New(logger, clientConf)
+		broadCaster, err := broadcaster.New(clientConf)
 		if err != nil {
-			logger.WithError(err).Error("error creating broadcaster")
+			logrus.WithError(err).Fatal("error creating broadcaster")
 		}
 
 		if err := broadCaster.Start(); err != nil {
-			logger.Fatal(err)
+			logrus.WithError(err).Fatal("error starting broadcaster")
 		}
 	},
 }
@@ -68,7 +65,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gameserver-event-broadcaster.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gameserver-events-broadcaster.yaml)")
 	rootCmd.Flags().StringVar(&kubeconfig, "kubeconfig", "", "Set KUBECONFIG")
 	rootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Set log level to verbose, defaults to false")
 }
@@ -86,9 +83,9 @@ func initConfig() {
 			os.Exit(1)
 		}
 
-		// Search config in home directory with name ".gameserver-event-broadcaster" (without extension).
+		// Search config in home directory with name ".gameserver-events-broadcaster" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".gameserver-event-broadcaster")
+		viper.SetConfigName(".gameserver-events-broadcaster")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
