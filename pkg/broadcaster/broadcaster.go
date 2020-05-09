@@ -2,6 +2,7 @@ package broadcaster
 
 import (
 	"github.com/Octops/gameserver-events-broadcaster/pkg/controller"
+	"github.com/Octops/gameserver-events-broadcaster/pkg/runtime/log"
 	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -12,8 +13,9 @@ type Broadcaster struct {
 	controller *controller.GameServerController
 }
 
-func New(logger *logrus.Entry, config *rest.Config) (*Broadcaster, error) {
-	gsController, err := controller.NewGameServerController(logger, config)
+func New(config *rest.Config) (*Broadcaster, error) {
+	logger := log.NewLoggerWithField("source", "broadcaster")
+	gsController, err := controller.NewGameServerController(config)
 	if err != nil {
 		return nil, err
 	}
