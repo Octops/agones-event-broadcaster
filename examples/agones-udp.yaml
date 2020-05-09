@@ -1,0 +1,21 @@
+apiVersion: "agones.dev/v1"
+kind: GameServer
+metadata:
+  name: "simple-udp-agones"
+spec:
+  ports:
+    - name: default
+      portPolicy: Dynamic
+      containerPort: 7654
+  template:
+    spec:
+      containers:
+        - name: simple-udp
+          image: gcr.io/agones-images/udp-server:0.18
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "20m"
+            limits:
+              memory: "32Mi"
+              cpu: "20m"
