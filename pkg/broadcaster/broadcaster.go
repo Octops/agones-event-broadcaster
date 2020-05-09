@@ -15,15 +15,19 @@ type Broadcaster struct {
 
 func New(config *rest.Config) (*Broadcaster, error) {
 	logger := log.NewLoggerWithField("source", "broadcaster")
-	gsController, err := controller.NewGameServerController(config)
+
+	gsBroadcaster := &Broadcaster{
+		logger: logger,
+	}
+
+	gsController, err := controller.NewGameServerController(config, gsBroadcaster)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Broadcaster{
-		logger:     logger,
-		controller: gsController,
-	}, nil
+	gsBroadcaster.controller = gsController
+
+	return gsBroadcaster, nil
 }
 
 func (b *Broadcaster) Start() error {
@@ -31,6 +35,24 @@ func (b *Broadcaster) Start() error {
 		b.logger.WithError(err).Error("broadcaster could not start")
 		return err
 	}
+
+	return nil
+}
+
+func (b *Broadcaster) OnAdd(obj interface{}) error {
+	b.logger.Debug(obj)
+
+	return nil
+}
+
+func (b *Broadcaster) OnUpdate(oldObj interface{}, newObj interface{}) error {
+	b.logger.Debug(oldObj, newObj)
+
+	return nil
+}
+
+func (b *Broadcaster) OnDelete(obj interface{}) error {
+	b.logger.Debug(obj)
 
 	return nil
 }
