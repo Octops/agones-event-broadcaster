@@ -17,32 +17,47 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/Octops/gameserver-events-broadcaster/pkg/broadcaster"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/tools/clientcmd"
 	"os"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+var (
+	cfgFile    string
+	kubeconfig string
+	verbose    bool
+)
 
-// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "gameserver-event-broadcaster",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "Broadcast Events from Agones GameServers",
+	Long:  `Broadcast Events from Agones GameServers`,
+	Run: func(cmd *cobra.Command, args []string) {
+		log := logrus.New()
+		if verbose {
+			log.SetLevel(logrus.DebugLevel)
+		}
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
+		logger := logrus.NewEntry(log)
+
+		clientConf, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+
+		broadCaster, err := broadcaster.New(logger, clientConf)
+		if err != nil {
+			logger.WithError(err).Error("error creating broadcaster")
+		}
+
+		if err := broadCaster.Start(); err != nil {
+			logger.Fatal(err)
+		}
+	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -53,15 +68,9 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gameserver-event-broadcaster.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.Flags().StringVar(&kubeconfig, "kubeconfig", "", "Set KUBECONFIG")
+	rootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Set log level to verbose, defaults to false")
 }
 
 // initConfig reads in config file and ENV variables if set.
