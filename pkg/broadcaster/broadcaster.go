@@ -49,24 +49,13 @@ func (b *Broadcaster) OnAdd(obj interface{}) error {
 		return nil
 	}
 
-	event := &events.GameServerDeleted{
-		Message: &events.EventMessage{
-			Body: obj,
-		},
+	message := &events.EventMessage{
+		Body: obj,
 	}
 
-	envelope, err := b.Broker.BuildEnvelope(event)
-	if err != nil {
-		b.logger.WithError(err).Error("error building envelope")
-	}
+	event := events.GameServerAdded(message)
 
-	if err = b.Broker.SendMessage(envelope); err != nil {
-		b.logger.WithError(err).Error("error sending envelope")
-	}
-
-	b.logger.Debug(envelope)
-
-	return nil
+	return b.Publish(event)
 }
 
 func (b *Broadcaster) OnUpdate(oldObj interface{}, newObj interface{}) error {
@@ -75,9 +64,21 @@ func (b *Broadcaster) OnUpdate(oldObj interface{}, newObj interface{}) error {
 		return nil
 	}
 
-	b.logger.Debug(oldObj, newObj)
+	body := struct {
+		OldObj interface{}
+		NewObj interface{}
+	}{
+		OldObj: oldObj,
+		NewObj: newObj,
+	}
 
-	return nil
+	message := &events.EventMessage{
+		Body: body,
+	}
+
+	event := events.GameServerUpdated(message)
+
+	return b.Publish(event)
 }
 
 func (b *Broadcaster) OnDelete(obj interface{}) error {
@@ -86,7 +87,26 @@ func (b *Broadcaster) OnDelete(obj interface{}) error {
 		return nil
 	}
 
-	b.logger.Debug(obj)
+	message := &events.EventMessage{
+		Body: obj,
+	}
+
+	event := events.GameServerDeleted(message)
+
+	return b.Publish(event)
+}
+
+func (b *Broadcaster) Publish(event events.Event) error {
+	envelope, err := b.Broker.BuildEnvelope(event)
+	if err != nil {
+		b.logger.WithError(err).Error("error building envelope")
+		return err
+	}
+
+	if err = b.Broker.SendMessage(envelope); err != nil {
+		b.logger.WithError(err).Error("error sending envelope")
+		return err
+	}
 
 	return nil
 }
