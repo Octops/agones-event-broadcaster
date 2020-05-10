@@ -1,5 +1,13 @@
 package events
 
+type GameServerEventType string
+
+var (
+	GameServerEventAdded   = "gameserver.events.added"
+	GameServerEventUpdated = "gameserver.events.updated"
+	GameServerEventDeleted = "gameserver.events.deleted"
+)
+
 type GameServerEvent struct {
 	Type string
 	Message
