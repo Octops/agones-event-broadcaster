@@ -18,6 +18,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/Octops/gameserver-events-broadcaster/pkg/broadcaster"
+	"github.com/Octops/gameserver-events-broadcaster/pkg/brokers"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/tools/clientcmd"
@@ -44,7 +45,9 @@ var rootCmd = &cobra.Command{
 
 		clientConf, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 
-		broadCaster, err := broadcaster.New(clientConf)
+		broker := &brokers.StdoutBroker{}
+		broadCaster, err := broadcaster.New(clientConf, broker)
+
 		if err != nil {
 			logrus.WithError(err).Fatal("error creating broadcaster")
 		}
