@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	agones.dev/agones v1.5.0
+	cloud.google.com/go/pubsub v1.0.1
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/sirupsen/logrus v1.2.0
