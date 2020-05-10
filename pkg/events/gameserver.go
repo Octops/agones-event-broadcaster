@@ -15,21 +15,21 @@ type GameServerEvent struct {
 
 func GameServerDeleted(message Message) *GameServerEvent {
 	return &GameServerEvent{
-		Type:    "gameserver.events.deleted",
+		Type:    GameServerEventDeleted,
 		Message: message,
 	}
 }
 
 func GameServerAdded(message Message) *GameServerEvent {
 	return &GameServerEvent{
-		Type:    "gameserver.events.added",
+		Type:    GameServerEventAdded,
 		Message: message,
 	}
 }
 
 func GameServerUpdated(message Message) *GameServerEvent {
 	return &GameServerEvent{
-		Type:    "gameserver.events.updated",
+		Type:    GameServerEventUpdated,
 		Message: message,
 	}
 }
