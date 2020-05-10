@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestPubSubBroker_BuildEnvelope_GameServerEvent(t *testing.T) {
+func Test_PubSubBroker_BuildEnvelope_GameServerEvent(t *testing.T) {
 	projectID := "nice-storm-235718"
 
 	testCases := []struct {
@@ -83,12 +83,12 @@ func TestPubSubBroker_BuildEnvelope_GameServerEvent(t *testing.T) {
 
 			got, err := broker.BuildEnvelope(event)
 			require.Nil(t, err)
-			require.Equal(t, tc.expect, got)
+			require.Equal(t, reflect.DeepEqual(got, tc.expect), true)
 		})
 	}
 }
 
-func TestPubSubBroker_SendMessage(t *testing.T) {
+func Test_PubSubBroker_SendMessage(t *testing.T) {
 	t.Run("it should send a message to a topic that exists", func(t *testing.T) {
 		projectID := "nice-storm-235718"
 		topicID := "gameserver.events"
