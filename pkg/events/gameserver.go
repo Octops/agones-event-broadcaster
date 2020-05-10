@@ -1,27 +1,22 @@
 package events
 
-type GameServerEventType string
-
 var (
-	GameServerEventAdded   = "gameserver.events.added"
-	GameServerEventUpdated = "gameserver.events.updated"
-	GameServerEventDeleted = "gameserver.events.deleted"
+	GameServerEventAdded   GameServerEventType = "gameserver.events.added"
+	GameServerEventUpdated GameServerEventType = "gameserver.events.updated"
+	GameServerEventDeleted GameServerEventType = "gameserver.events.deleted"
 )
 
-type GameServerEvent struct {
-	Type string
-	Message
-}
+type GameServerEventType string
 
-func GameServerDeleted(message Message) *GameServerEvent {
-	return &GameServerEvent{
-		Type:    GameServerEventDeleted,
-		Message: message,
-	}
+type GameServerEvent struct {
+	Source EventSource
+	Type   GameServerEventType
+	Message
 }
 
 func GameServerAdded(message Message) *GameServerEvent {
 	return &GameServerEvent{
+		Source:  EventSourceOnAdd,
 		Type:    GameServerEventAdded,
 		Message: message,
 	}
@@ -29,11 +24,28 @@ func GameServerAdded(message Message) *GameServerEvent {
 
 func GameServerUpdated(message Message) *GameServerEvent {
 	return &GameServerEvent{
+		Source:  EventSourceOnUpdate,
 		Type:    GameServerEventUpdated,
 		Message: message,
 	}
 }
 
-func (t *GameServerEvent) EventType() string {
-	return t.Type
+func GameServerDeleted(message Message) *GameServerEvent {
+	return &GameServerEvent{
+		Source:  EventSourceOnDelete,
+		Type:    GameServerEventDeleted,
+		Message: message,
+	}
+}
+
+func (t *GameServerEvent) EventType() EventType {
+	return EventType(t.Type)
+}
+
+func (t *GameServerEvent) EventSource() EventSource {
+	return t.Source
+}
+
+func (t GameServerEventType) String() string {
+	return string(t)
 }
