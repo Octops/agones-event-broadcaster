@@ -29,7 +29,7 @@ func Test_PubSubBroker_BuildEnvelope_GameServerEvent(t *testing.T) {
 				Header: &events.Header{
 					Headers: map[string]string{
 						PROJECTID_HEADER_KEY:  projectID,
-						EVENT_TYPE_HEADER_KEY: events.GameServerEventAdded,
+						EVENT_TYPE_HEADER_KEY: events.GameServerEventAdded.String(),
 						TOPIC_ID_HEADER_KEY:   "gameserver.events",
 					},
 				},
@@ -45,7 +45,7 @@ func Test_PubSubBroker_BuildEnvelope_GameServerEvent(t *testing.T) {
 				Header: &events.Header{
 					Headers: map[string]string{
 						PROJECTID_HEADER_KEY:  projectID,
-						EVENT_TYPE_HEADER_KEY: events.GameServerEventUpdated,
+						EVENT_TYPE_HEADER_KEY: events.GameServerEventUpdated.String(),
 						TOPIC_ID_HEADER_KEY:   "gameserver.events",
 					},
 				},
@@ -61,7 +61,7 @@ func Test_PubSubBroker_BuildEnvelope_GameServerEvent(t *testing.T) {
 				Header: &events.Header{
 					Headers: map[string]string{
 						PROJECTID_HEADER_KEY:  projectID,
-						EVENT_TYPE_HEADER_KEY: events.GameServerEventDeleted,
+						EVENT_TYPE_HEADER_KEY: events.GameServerEventDeleted.String(),
 						TOPIC_ID_HEADER_KEY:   "gameserver.events",
 					},
 				},
@@ -112,9 +112,9 @@ func Test_PubSubBroker_SendMessage(t *testing.T) {
 		envelope := &events.Envelope{
 			Header: &events.Header{
 				Headers: map[string]string{
-					"event_type":        events.GameServerEventAdded,
-					"project_id":        projectID,
-					TOPIC_ID_HEADER_KEY: topicID,
+					PROJECTID_HEADER_KEY:  projectID,
+					EVENT_TYPE_HEADER_KEY: events.GameServerEventAdded.String(),
+					TOPIC_ID_HEADER_KEY:   topicID,
 				},
 			},
 			Message: "fakeBody",
@@ -140,9 +140,9 @@ func Test_PubSubBroker_SendMessage(t *testing.T) {
 		envelope := &events.Envelope{
 			Header: &events.Header{
 				Headers: map[string]string{
-					"event_type": events.GameServerEventAdded,
-					"project_id": projectID,
-					"topic_id":   topicID,
+					PROJECTID_HEADER_KEY:  projectID,
+					EVENT_TYPE_HEADER_KEY: events.GameServerEventAdded.String(),
+					TOPIC_ID_HEADER_KEY:   topicID,
 				},
 			},
 			Message: "fakeBody",
@@ -177,8 +177,8 @@ func Test_GetTopicIDFromHeader(t *testing.T) {
 		{
 			desc: "it should return topicID from multiples header",
 			header: map[string]string{
-				TOPIC_ID_HEADER_KEY: "gameserver.events",
-				"event_type":        "Added",
+				TOPIC_ID_HEADER_KEY:   "gameserver.events",
+				EVENT_TYPE_HEADER_KEY: "Added",
 			},
 			want: want{
 				TopicID: "gameserver.events",
