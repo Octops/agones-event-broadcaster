@@ -9,6 +9,7 @@ require (
 	github.com/sirupsen/logrus v1.2.0
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.7.0
+	github.com/stretchr/testify v1.3.0
 	k8s.io/api v0.0.0-20191004102349-159aefb8556b
 	k8s.io/apimachinery v0.0.0-20191004074956-c5d2f014d689
 	k8s.io/client-go v11.0.1-0.20191029005444-8e4128053008+incompatible
