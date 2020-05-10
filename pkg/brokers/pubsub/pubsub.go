@@ -3,7 +3,6 @@ package pubsub
 import (
 	"cloud.google.com/go/pubsub"
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/Octops/gameserver-events-broadcaster/pkg/events"
 	"github.com/sirupsen/logrus"
@@ -25,6 +24,7 @@ type PubSubBroker struct {
 func NewPubSubBroker(config *Config) (*PubSubBroker, error) {
 	ctx := context.Background()
 
+	// TODO: Implement Options https://pkg.go.dev/google.golang.org/api/option@v0.13.0?tab=doc#ClientOption
 	client, err := pubsub.NewClient(ctx, config.ProjectID)
 	if err != nil {
 		return nil, fmt.Errorf("error creating pubsub client for projectID %s: %v", config.ProjectID, err)
@@ -55,18 +55,12 @@ func (b *PubSubBroker) SendMessage(envelope *events.Envelope) error {
 		return fmt.Errorf("topicID is not present on the envelope header")
 	}
 
-	topic := b.Client.Topic(topicID)
-
-	ok, err := topic.Exists(ctx)
+	topic, err := b.TopicFor(ctx, topicID)
 	if err != nil {
-		return fmt.Errorf("could not check if topic exists: %v", err)
+		return fmt.Errorf("error building topic %s: %v", topicID, err)
 	}
 
-	if !ok {
-		return fmt.Errorf("topic %s for projectID %s does not exist", b.ProjectID, topicID)
-	}
-
-	msg, err := EncodedEnvelope(envelope)
+	msg, err := envelope.Encode()
 	if err != nil {
 		return fmt.Errorf("error encoding envelope: %v", err)
 	}
@@ -79,12 +73,27 @@ func (b *PubSubBroker) SendMessage(envelope *events.Envelope) error {
 	// ID is returned for the published message.
 	id, err := result.Get(ctx)
 	if err != nil {
-		return fmt.Errorf("Get: %v", err)
+		return fmt.Errorf("error getting result for the message published to topic \"%s\": %v", topicID, err)
 	}
 
-	logrus.WithField("broker", "pubsub").Infof("message published topicID:\"%s\" messageID:\"%s\"", topicID, id)
+	logrus.WithField("broker", "pubsub").Infof("message published to topicID:\"%s\" messageID:\"%s\"", topicID, id)
 
 	return nil
+}
+
+func (b *PubSubBroker) TopicFor(ctx context.Context, topicID string) (*pubsub.Topic, error) {
+	topic := b.Client.Topic(topicID)
+
+	ok, err := topic.Exists(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not check if topic exists: %v", err)
+	}
+
+	if !ok {
+		return nil, fmt.Errorf("topic %s for projectID %s does not exist", b.ProjectID, topicID)
+	}
+
+	return topic, err
 }
 
 func GetTopicIDFromHeader(envelope *events.Envelope) (string, bool) {
@@ -93,8 +102,4 @@ func GetTopicIDFromHeader(envelope *events.Envelope) (string, bool) {
 	}
 
 	return "", false
-}
-
-func EncodedEnvelope(envelope *events.Envelope) ([]byte, error) {
-	return json.Marshal(envelope)
 }
