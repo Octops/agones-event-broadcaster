@@ -8,6 +8,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	PROJECTID_HEADER_KEY  = "pubsub_project_id"
+	TOPIC_ID_HEADER_KEY   = "pubsub_topic_id"
+	EVENT_TYPE_HEADER_KEY = "pubsub_event_type"
+)
+
 type Config struct {
 	ProjectID string
 	// TODO: Enable topic settings per event type
@@ -38,9 +44,9 @@ func NewPubSubBroker(config *Config) (*PubSubBroker, error) {
 
 func (b *PubSubBroker) BuildEnvelope(event events.Event) (*events.Envelope, error) {
 	envelope := &events.Envelope{}
-	envelope.AddHeader("event_type", event.EventType())
-	envelope.AddHeader("project_id", b.ProjectID)
-	envelope.AddHeader("topic_id", "gameserver.events")
+	envelope.AddHeader(EVENT_TYPE_HEADER_KEY, event.EventType())
+	envelope.AddHeader(PROJECTID_HEADER_KEY, b.ProjectID)
+	envelope.AddHeader(TOPIC_ID_HEADER_KEY, "gameserver.events")
 
 	envelope.Message = event.(events.Message).Content()
 
@@ -97,7 +103,7 @@ func (b *PubSubBroker) TopicFor(ctx context.Context, topicID string) (*pubsub.To
 }
 
 func GetTopicIDFromHeader(envelope *events.Envelope) (string, bool) {
-	if topicID, ok := envelope.Header.Headers["topic_id"]; ok {
+	if topicID, ok := envelope.Header.Headers[TOPIC_ID_HEADER_KEY]; ok {
 		return topicID, true
 	}
 

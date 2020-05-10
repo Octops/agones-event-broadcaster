@@ -27,9 +27,9 @@ func TestPubSubBroker_BuildEnvelope_GameServerEvent(t *testing.T) {
 			expect: &events.Envelope{
 				Header: &events.Header{
 					Headers: map[string]string{
-						"event_type": events.GameServerEventAdded,
-						"project_id": projectID,
-						"topic_id":   "gameserver.events",
+						PROJECTID_HEADER_KEY:  projectID,
+						EVENT_TYPE_HEADER_KEY: events.GameServerEventAdded,
+						TOPIC_ID_HEADER_KEY:   "gameserver.events",
 					},
 				},
 				Message: "fakeBody",
@@ -43,9 +43,9 @@ func TestPubSubBroker_BuildEnvelope_GameServerEvent(t *testing.T) {
 			expect: &events.Envelope{
 				Header: &events.Header{
 					Headers: map[string]string{
-						"event_type": events.GameServerEventUpdated,
-						"project_id": projectID,
-						"topic_id":   "gameserver.events",
+						PROJECTID_HEADER_KEY:  projectID,
+						EVENT_TYPE_HEADER_KEY: events.GameServerEventUpdated,
+						TOPIC_ID_HEADER_KEY:   "gameserver.events",
 					},
 				},
 				Message: "fakeBody",
@@ -59,9 +59,9 @@ func TestPubSubBroker_BuildEnvelope_GameServerEvent(t *testing.T) {
 			expect: &events.Envelope{
 				Header: &events.Header{
 					Headers: map[string]string{
-						"event_type": events.GameServerEventDeleted,
-						"project_id": projectID,
-						"topic_id":   "gameserver.events",
+						PROJECTID_HEADER_KEY:  projectID,
+						EVENT_TYPE_HEADER_KEY: events.GameServerEventDeleted,
+						TOPIC_ID_HEADER_KEY:   "gameserver.events",
 					},
 				},
 				Message: "fakeBody",
