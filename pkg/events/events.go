@@ -4,8 +4,8 @@ type EventMessage struct {
 	Body interface{}
 }
 
-func (g *EventMessage) Content() interface{} {
-	return g.Body
+func (e *EventMessage) Content() interface{} {
+	return e.Body
 }
 
 type GameServerDeleted struct {
@@ -13,6 +13,15 @@ type GameServerDeleted struct {
 	Message
 }
 
+type GameServerAdded struct {
+	Event
+	Message
+}
+
+func (g *GameServerAdded) EventType() string {
+	return "gameserver.events.added"
+}
+
 func (g *GameServerDeleted) EventType() string {
-	return "GameServerDeleted"
+	return "gameserver.events.deleted"
 }
