@@ -18,7 +18,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/Octops/gameserver-events-broadcaster/pkg/broadcaster"
-	"github.com/Octops/gameserver-events-broadcaster/pkg/brokers"
+	"github.com/Octops/gameserver-events-broadcaster/pkg/brokers/pubsub"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/tools/clientcmd"
@@ -45,7 +45,11 @@ var rootCmd = &cobra.Command{
 
 		clientConf, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 
-		broker := &brokers.StdoutBroker{}
+		//broker := &stdout.StdoutBroker{}
+		broker, err := pubsub.NewPubSubBroker(&pubsub.Config{
+			ProjectID: os.Getenv("PUBSUB_PROJECT_ID"),
+		})
+
 		broadCaster, err := broadcaster.New(clientConf, broker)
 
 		if err != nil {

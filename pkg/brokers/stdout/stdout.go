@@ -1,4 +1,4 @@
-package brokers
+package stdout
 
 import (
 	"encoding/json"
@@ -10,10 +10,8 @@ type StdoutBroker struct {
 }
 
 func (s *StdoutBroker) BuildEnvelope(event events.Event) (*events.Envelope, error) {
-	eventType := event.EventType()
-
 	envelope := &events.Envelope{}
-	envelope.AddHeader("event_type", eventType)
+	envelope.AddHeader("event_type", event.EventType())
 	envelope.Message = event.(events.Message).Content()
 
 	return envelope, nil
