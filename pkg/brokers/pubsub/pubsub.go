@@ -109,3 +109,10 @@ func GetTopicIDFromHeader(envelope *events.Envelope) (string, bool) {
 
 	return "", false
 }
+
+func CheckEmpty(source, newValue string) string {
+	if source == "" {
+		return newValue
+	}
+	return source
+}
