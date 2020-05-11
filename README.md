@@ -111,6 +111,11 @@ broker, err := pubsub.NewPubSubBroker(&pubsub.Config{
 }, opts)
 ```
 
+Check the [`examples/pubsub/main.go`](examples/pubsub/main.go) file for a complete example.
+```bash
+$ go run examples/pubsub/main.go 
+```
+
 ## Development
 
 The steps below provide the instructions for running the broadcaster on your local laptop. We will be using the `stdout ` broker. That means messages will not be published to any remote service. 
@@ -122,6 +127,16 @@ Requirements:
 
 ```bash 
 $ go run main.go --kubeconfig=$KUBECONFIG
+```
+
+On another terminal session push GameServers manifests to the Kubernetes API. You can use one from the `examples` folder.
+Check the broadcaster output for details. 
+```bash
+# Triggers Add and Update events
+$ kubectl apply -f examples/agones-udp.yaml
+
+# Triggers a Delete event
+$ kubectl delete -f examples/agones-udp.yaml
 ```
 
 Running Tests
