@@ -44,13 +44,31 @@ func NewPubSubBroker(config *Config) (*PubSubBroker, error) {
 
 func (b *PubSubBroker) BuildEnvelope(event events.Event) (*events.Envelope, error) {
 	envelope := &events.Envelope{}
-	envelope.AddHeader(EVENT_TYPE_HEADER_KEY, event.EventType().String())
-	envelope.AddHeader(PROJECTID_HEADER_KEY, b.ProjectID)
-	envelope.AddHeader(TOPIC_ID_HEADER_KEY, "gameserver.events")
+
+	b.SetEnvelopeHeader(event, envelope)
 
 	envelope.Message = event.(events.Message).Content()
 
 	return envelope, nil
+}
+
+func (b *PubSubBroker) SetEnvelopeHeader(event events.Event, envelope *events.Envelope) {
+	var topicID string
+
+	switch event.EventSource() {
+	case events.EventSourceOnAdd:
+		topicID = b.OnAddTopicID
+	case events.EventSourceOnUpdate:
+		topicID = b.OnUpdateTopicID
+	case events.EventSourceOnDelete:
+		topicID = b.OnDeleteTopicID
+	default:
+		topicID = b.GenericTopicID
+	}
+
+	envelope.AddHeader(TOPIC_ID_HEADER_KEY, topicID)
+	envelope.AddHeader(EVENT_TYPE_HEADER_KEY, event.EventType().String())
+	envelope.AddHeader(PROJECTID_HEADER_KEY, b.ProjectID)
 }
 
 func (b *PubSubBroker) SendMessage(envelope *events.Envelope) error {
