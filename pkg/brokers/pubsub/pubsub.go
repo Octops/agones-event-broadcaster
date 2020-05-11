@@ -12,14 +12,16 @@ const (
 	PROJECTID_HEADER_KEY  = "pubsub_project_id"
 	TOPIC_ID_HEADER_KEY   = "pubsub_topic_id"
 	EVENT_TYPE_HEADER_KEY = "pubsub_event_type"
+	DEFAULT_TOPIC_ID      = "gameserver.events"
 )
 
+// GenericTopicID is used when specific events topics are not set. Defaults to "gameserver.events"
 type Config struct {
-	ProjectID string
-	// TODO: Enable topic settings per event type
-	//OnAddTopicID    string
-	//OnUpdateTopicID string
-	//OnDeleteTopicID string
+	ProjectID       string
+	GenericTopicID  string
+	OnAddTopicID    string
+	OnUpdateTopicID string
+	OnDeleteTopicID string
 }
 
 type PubSubBroker struct {
