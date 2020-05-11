@@ -11,7 +11,7 @@ type StdoutBroker struct {
 
 func (s *StdoutBroker) BuildEnvelope(event events.Event) (*events.Envelope, error) {
 	envelope := &events.Envelope{}
-	envelope.AddHeader("event_type", event.EventType())
+	envelope.AddHeader("event_type", event.EventType().String())
 	envelope.Message = event.(events.Message).Content()
 
 	return envelope, nil

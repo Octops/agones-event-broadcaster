@@ -96,6 +96,8 @@ func (b *PubSubBroker) SendMessage(envelope *events.Envelope) error {
 func (b *PubSubBroker) TopicFor(ctx context.Context, topicID string) (*pubsub.Topic, error) {
 	topic := b.Client.Topic(topicID)
 
+	// TODO: This check requires Pub/Sub Editor role.
+	// Review if checking if topic exists is worth having such a role
 	ok, err := topic.Exists(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not check if topic exists: %v", err)
