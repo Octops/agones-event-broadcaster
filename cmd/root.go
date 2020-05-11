@@ -60,12 +60,12 @@ var rootCmd = &cobra.Command{
 			logrus.WithError(err).Fatal("error creating broker")
 		}
 
-		broadCaster, err := broadcaster.New(clientConf, broker)
+		gsBroadcaster, err := broadcaster.New(clientConf, broker)
 		if err != nil {
 			logrus.WithError(err).Fatal("error creating broadcaster")
 		}
 
-		if err := broadCaster.Start(); err != nil {
+		if err := gsBroadcaster.Start(); err != nil {
 			logrus.WithError(err).Fatal("error starting broadcaster")
 		}
 	},
