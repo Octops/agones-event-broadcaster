@@ -82,28 +82,13 @@ func (b *PubSubBroker) SendMessage(envelope *events.Envelope) error {
 		return fmt.Errorf("topicID is not present on the envelope header")
 	}
 
-	topic, err := b.TopicFor(ctx, topicID)
+	messageID, err := b.publish(ctx, envelope, topicID)
 	if err != nil {
-		return fmt.Errorf("error building topic %s: %v", topicID, err)
+		logrus.WithError(err).Errorf("error publishing message to topic %s", topicID)
+		return err
 	}
 
-	msg, err := envelope.Encode()
-	if err != nil {
-		return fmt.Errorf("error encoding envelope: %v", err)
-	}
-
-	result := topic.Publish(ctx, &pubsub.Message{
-		Data: msg,
-	})
-
-	// Block until the result is returned and a server-generated
-	// ID is returned for the published message.
-	id, err := result.Get(ctx)
-	if err != nil {
-		return fmt.Errorf("error getting result for the message published to topic \"%s\": %v", topicID, err)
-	}
-
-	logrus.WithField("broker", "pubsub").Infof("message published to topicID:\"%s\" messageID:\"%s\"", topicID, id)
+	logrus.WithField("broker", "pubsub").Infof("message published to topicID:\"%s\" messageID:\"%s\"", topicID, messageID)
 
 	return nil
 }
@@ -121,6 +106,31 @@ func (b *PubSubBroker) TopicFor(ctx context.Context, topicID string) (*pubsub.To
 	}
 
 	return topic, err
+}
+
+func (b *PubSubBroker) publish(ctx context.Context, envelope *events.Envelope, topicID string) (string, error) {
+	msg, err := envelope.Encode()
+	if err != nil {
+		return "", fmt.Errorf("error encoding envelope: %v", err)
+	}
+
+	topic, err := b.TopicFor(ctx, topicID)
+	if err != nil {
+		return "", fmt.Errorf("error building topic %s: %v", topicID, err)
+	}
+
+	result := topic.Publish(ctx, &pubsub.Message{
+		Data: msg,
+	})
+
+	// Block until the result is returned and a server-generated
+	// ID is returned for the published message.
+	id, err := result.Get(ctx)
+	if err != nil {
+		return "", fmt.Errorf("error getting result for the message published to topic \"%s\": %v", topicID, err)
+	}
+
+	return id, nil
 }
 
 func (c *Config) ApplyDefaults() {
