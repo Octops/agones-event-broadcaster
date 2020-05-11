@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/Octops/gameserver-events-broadcaster/pkg/events"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/api/option"
 )
 
 const (
@@ -29,12 +30,11 @@ type PubSubBroker struct {
 	*pubsub.Client
 }
 
-func NewPubSubBroker(config *Config) (*PubSubBroker, error) {
+func NewPubSubBroker(config *Config, opts ...option.ClientOption) (*PubSubBroker, error) {
 	config.ApplyDefaults()
 
 	ctx := context.Background()
-	// TODO: Implement Options https://pkg.go.dev/google.golang.org/api/option@v0.13.0?tab=doc#ClientOption
-	client, err := pubsub.NewClient(ctx, config.ProjectID)
+	client, err := pubsub.NewClient(ctx, config.ProjectID, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("error creating pubsub client for projectID %s: %v", config.ProjectID, err)
 	}
@@ -119,6 +119,7 @@ func (b *PubSubBroker) publish(ctx context.Context, envelope *events.Envelope, t
 		return "", fmt.Errorf("error building topic %s: %v", topicID, err)
 	}
 
+	// TODO: Implement Publish in batches
 	result := topic.Publish(ctx, &pubsub.Message{
 		Data: msg,
 	})
