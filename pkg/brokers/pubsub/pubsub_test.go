@@ -11,7 +11,7 @@ import (
 )
 
 func Test_PubSubBroker_BuildEnvelope_GameServerEvent(t *testing.T) {
-	projectID := "nice-storm-235718"
+	projectID := "calm-weather-345673"
 
 	testCases := []struct {
 		desc    string
@@ -93,7 +93,7 @@ func Test_PubSubBroker_SendMessage(t *testing.T) {
 	t.Parallel()
 
 	t.Run("it should send a message to a topic that exists", func(t *testing.T) {
-		projectID := "nice-storm-235718"
+		projectID := "calm-weather-345673"
 		topicID := "gameserver.events"
 
 		client := setup(t, projectID, topicID)
@@ -125,7 +125,7 @@ func Test_PubSubBroker_SendMessage(t *testing.T) {
 	})
 
 	t.Run("it should not send a message to a topic that does not exist", func(t *testing.T) {
-		projectID := "nice-storm-235718"
+		projectID := "calm-weather-345673"
 		topicID := "none"
 
 		_ = setup(t, projectID, topicID)
