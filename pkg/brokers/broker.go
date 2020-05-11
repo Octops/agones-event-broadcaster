@@ -2,7 +2,7 @@ package brokers
 
 import "github.com/Octops/gameserver-events-broadcaster/pkg/events"
 
-// Business logic, build envelope, parse message, call Dispatcher
+// Broker is the service used by the Broadcaster for publishing events
 type Broker interface {
 	BuildEnvelope(event events.Event) (*events.Envelope, error)
 	SendMessage(envelope *events.Envelope) error

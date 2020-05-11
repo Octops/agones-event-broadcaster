@@ -4,6 +4,7 @@ import (
 	"cloud.google.com/go/pubsub"
 	"context"
 	"fmt"
+	"github.com/Octops/gameserver-events-broadcaster/pkg/brokers"
 	"github.com/Octops/gameserver-events-broadcaster/pkg/events"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/api/option"
@@ -16,7 +17,11 @@ const (
 	DEFAULT_TOPIC_ID      = "gameserver.events"
 )
 
-// GenericTopicID is used when specific events topics are not set. Defaults to "gameserver.events"
+var _ brokers.Broker = (*PubSubBroker)(nil)
+
+// Config is the data structure that holds the configuration passed to the Google Pub/Sub Broker.
+// GenericTopicID is used when specific events topics are not present and all the events
+// should be published to a single topic. Defaults to "gameserver.events"
 type Config struct {
 	ProjectID       string
 	GenericTopicID  string
@@ -25,6 +30,7 @@ type Config struct {
 	OnDeleteTopicID string
 }
 
+// PubSubBroker is a implementation of the Broker interface that uses Google Cloud PubSub for publishing messages
 type PubSubBroker struct {
 	*Config
 	*pubsub.Client
@@ -45,6 +51,8 @@ func NewPubSubBroker(config *Config, opts ...option.ClientOption) (*PubSubBroker
 	}, nil
 }
 
+// BuildEnvelope builds the envelope for a particular event.
+// It will set the enveloper header and message content
 func (b *PubSubBroker) BuildEnvelope(event events.Event) (*events.Envelope, error) {
 	envelope := &events.Envelope{}
 
@@ -55,6 +63,8 @@ func (b *PubSubBroker) BuildEnvelope(event events.Event) (*events.Envelope, erro
 	return envelope, nil
 }
 
+// SetEnvelopeHeader sets the envelope header for a particular event.
+// Those specific headers will be used by the broker when publishing the message to the Google Pub/Sub topic
 func (b *PubSubBroker) SetEnvelopeHeader(event events.Event, envelope *events.Envelope) {
 	var topicID string
 
@@ -74,6 +84,7 @@ func (b *PubSubBroker) SetEnvelopeHeader(event events.Event, envelope *events.En
 	envelope.AddHeader(PROJECTID_HEADER_KEY, b.ProjectID)
 }
 
+// SendMessage publishes a particular envelope to a Google Pub/Sub topic.
 func (b *PubSubBroker) SendMessage(envelope *events.Envelope) error {
 	ctx := context.Background()
 
@@ -93,6 +104,7 @@ func (b *PubSubBroker) SendMessage(envelope *events.Envelope) error {
 	return nil
 }
 
+// TopicFor returns a topic if it already exists on Google Pub/Sub
 func (b *PubSubBroker) TopicFor(ctx context.Context, topicID string) (*pubsub.Topic, error) {
 	topic := b.Client.Topic(topicID)
 
@@ -110,6 +122,7 @@ func (b *PubSubBroker) TopicFor(ctx context.Context, topicID string) (*pubsub.To
 	return topic, err
 }
 
+// publish publishes the encoded version of the envelope as a message to the Google Pub/Sub topic
 func (b *PubSubBroker) publish(ctx context.Context, envelope *events.Envelope, topicID string) (string, error) {
 	msg, err := envelope.Encode()
 	if err != nil {
@@ -136,6 +149,7 @@ func (b *PubSubBroker) publish(ctx context.Context, envelope *events.Envelope, t
 	return id, nil
 }
 
+// ApplyDefaults sets default values for the Config used by the PubSubBroker
 func (c *Config) ApplyDefaults() {
 	c.GenericTopicID = CheckEmpty(c.GenericTopicID, DEFAULT_TOPIC_ID)
 	c.OnAddTopicID = CheckEmpty(c.OnAddTopicID, DEFAULT_TOPIC_ID)
@@ -143,6 +157,7 @@ func (c *Config) ApplyDefaults() {
 	c.OnDeleteTopicID = CheckEmpty(c.OnDeleteTopicID, DEFAULT_TOPIC_ID)
 }
 
+// GetTopicIDFromHeader extracts the topicID from the envelope's header
 func GetTopicIDFromHeader(envelope *events.Envelope) (string, bool) {
 	if topicID, ok := envelope.Header.Headers[TOPIC_ID_HEADER_KEY]; ok {
 		return topicID, true
@@ -151,6 +166,7 @@ func GetTopicIDFromHeader(envelope *events.Envelope) (string, bool) {
 	return "", false
 }
 
+// CheckEmpty is a helper function that will check if source is empty and assign newValue if so
 func CheckEmpty(source, newValue string) string {
 	if source == "" {
 		return newValue

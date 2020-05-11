@@ -10,12 +10,17 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
+// Broadcaster receives events (Add, Update and Delete) sent by the controller
+// and uses a Broker to publish those events.
 type Broadcaster struct {
 	logger     *logrus.Entry
 	controller *controller.GameServerController
 	brokers.Broker
 }
 
+// New returns a new GameServer broadcaster
+// It required a config to be passed to the GameServer controller
+// and a broker that will be publishing messages
 func New(config *rest.Config, broker brokers.Broker) (*Broadcaster, error) {
 	logger := log.NewLoggerWithField("source", "broadcaster")
 
@@ -34,6 +39,7 @@ func New(config *rest.Config, broker brokers.Broker) (*Broadcaster, error) {
 	return gsBroadcaster, nil
 }
 
+// Start run the controller that sends events back to the broadcaster event handlers
 func (b *Broadcaster) Start() error {
 	if err := b.controller.Run(ctrl.SetupSignalHandler()); err != nil {
 		b.logger.WithError(err).Error("broadcaster could not start")
@@ -43,6 +49,7 @@ func (b *Broadcaster) Start() error {
 	return nil
 }
 
+// OnAdd is the event handler that reacts to Add events
 func (b *Broadcaster) OnAdd(obj interface{}) error {
 	if b.Broker == nil {
 		b.logger.Warn("broker is not available for the broadcaster, message will not be published")
@@ -58,6 +65,7 @@ func (b *Broadcaster) OnAdd(obj interface{}) error {
 	return b.Publish(event)
 }
 
+// OnUpdate is the event handler that reacts to Update events
 func (b *Broadcaster) OnUpdate(oldObj interface{}, newObj interface{}) error {
 	if b.Broker == nil {
 		b.logger.Warn("a broker is not available for the broadcaster, message will not be published")
@@ -81,6 +89,7 @@ func (b *Broadcaster) OnUpdate(oldObj interface{}, newObj interface{}) error {
 	return b.Publish(event)
 }
 
+// OnDelete is the event handler that reacts to Delete events
 func (b *Broadcaster) OnDelete(obj interface{}) error {
 	if b.Broker == nil {
 		b.logger.Warn("a broker is not available for the broadcaster, message will not be published")
@@ -96,6 +105,7 @@ func (b *Broadcaster) OnDelete(obj interface{}) error {
 	return b.Publish(event)
 }
 
+// Publish will publish the event wrapped on a envelope using the broker available
 func (b *Broadcaster) Publish(event events.Event) error {
 	envelope, err := b.Broker.BuildEnvelope(event)
 	if err != nil {

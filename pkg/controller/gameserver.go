@@ -23,16 +23,24 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
+// GameServerController watches Agones GameServer events
+// and notify the event handlers
 type GameServerController struct {
 	logger *logrus.Entry
 	manager.Manager
 }
 
+// reconciler is notified every time an event happens.
+// It can differentiate between events types.
+// The GameServer controller uses the eventHandler for a more grained control.
+// https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.6.0/pkg/reconcile?tab=doc#Reconciler
 type reconciler struct {
 	client.Client
 	scheme *runtime.Scheme
 }
 
+// NewGameServerController returns a GameServer controller that uses the informed eventHandler
+// to notify the Broadcaster about reconcile events for Agones GameServers
 func NewGameServerController(config *rest.Config, eventHandler handlers.EventHandler) (*GameServerController, error) {
 	logger := log.NewLoggerWithField("source", "GameServerController")
 	mgr, err := manager.New(config, manager.Options{})
@@ -130,6 +138,7 @@ func NewGameServerController(config *rest.Config, eventHandler handlers.EventHan
 	return controller, nil
 }
 
+// Run starts the GameServerController and watches reconcile events for Agones GameServers
 func (c *GameServerController) Run(stop <-chan struct{}) error {
 	if err := c.Start(stop); err != nil {
 		c.logger.WithError(err).Error("error starting controller manager")
