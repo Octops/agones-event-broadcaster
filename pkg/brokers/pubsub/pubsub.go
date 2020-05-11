@@ -28,8 +28,9 @@ type PubSubBroker struct {
 }
 
 func NewPubSubBroker(config *Config) (*PubSubBroker, error) {
-	ctx := context.Background()
+	config.ApplyDefaults()
 
+	ctx := context.Background()
 	// TODO: Implement Options https://pkg.go.dev/google.golang.org/api/option@v0.13.0?tab=doc#ClientOption
 	client, err := pubsub.NewClient(ctx, config.ProjectID)
 	if err != nil {
@@ -118,6 +119,13 @@ func (b *PubSubBroker) TopicFor(ctx context.Context, topicID string) (*pubsub.To
 	}
 
 	return topic, err
+}
+
+func (c *Config) ApplyDefaults() {
+	c.GenericTopicID = CheckEmpty(c.GenericTopicID, DEFAULT_TOPIC_ID)
+	c.OnAddTopicID = CheckEmpty(c.OnAddTopicID, DEFAULT_TOPIC_ID)
+	c.OnUpdateTopicID = CheckEmpty(c.OnUpdateTopicID, DEFAULT_TOPIC_ID)
+	c.OnDeleteTopicID = CheckEmpty(c.OnDeleteTopicID, DEFAULT_TOPIC_ID)
 }
 
 func GetTopicIDFromHeader(envelope *events.Envelope) (string, bool) {
