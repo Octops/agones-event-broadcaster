@@ -45,13 +45,17 @@ var rootCmd = &cobra.Command{
 
 		clientConf, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 
+		// Used only for debugging purpose
 		//broker := &stdout.StdoutBroker{}
+
 		broker, err := pubsub.NewPubSubBroker(&pubsub.Config{
-			ProjectID: os.Getenv("PUBSUB_PROJECT_ID"),
+			ProjectID:       os.Getenv("PUBSUB_PROJECT_ID"),
+			OnAddTopicID:    "gameserver.events.added",
+			OnUpdateTopicID: "gameserver.events.updated",
+			OnDeleteTopicID: "gameserver.events.deleted",
 		})
 
 		broadCaster, err := broadcaster.New(clientConf, broker)
-
 		if err != nil {
 			logrus.WithError(err).Fatal("error creating broadcaster")
 		}
