@@ -5,7 +5,7 @@ Broadcast Agones GameServer reconcile events using a message queueing service (o
 ### Agones
 > An open source, batteries-included, multiplayer dedicated game server scaling and orchestration platform that can run anywhere Kubernetes can run.
 
-You can find great documentation on https://agones.dev/site/
+You can find a great documentation on https://agones.dev/site/
 
 ### Use Cases
 The most common use case is for folks who want to extract information about their Agones GameServers running within Kubernetes.
@@ -33,6 +33,7 @@ Possible, but not limited, ideas for brokers are:
 - Match maker
 - ...
 
+## FAQ
 ### What does GameServer event mean?
 For the broadcaster, an event is some sort of information that reflects a GameServer state running within a Kubernetes cluster in a particular moment in time.
 
@@ -44,35 +45,25 @@ From the port allocation to the ready state, information will be added and updat
 The broadcaster implements the [Kubernetes Controller Pattern](https://kubernetes.io/docs/concepts/architecture/controller/#controller-pattern). It tracks events for resources of type GameServer.
 
 For every single time the state of a resource of type GameServer has changed, the broadcaster will be notified. Therefore, it will handle the event and publish a message using a Broker.
+Currently, the controller watches GameServers deployed on any namespace. It may change in the future if that becomes a performance issue.
 
 ### What kind of events are tracked?
 The broadcaster watches for Add, Update and Delete events.
-- Add: When a new gameserver is deployed by Agones
-- Update: When the gameserver state changes by changing any information from its specification.
-- Delete: When the gameserver is deleted from the Kubernetes cluster
+- Add: When a new GameServer is deployed by Agones
+- Update: When the GameServer state changes by changing any information from its specification.
+- Delete: When the GameServer is deleted from the Kubernetes cluster
 
 ### What does the event message content look like?
-The current version of the broadcaster sends the entire Agones GameServer representation of the state as json. Additionally, some headers holding information about event type and event source.
+The current version of the broadcaster sends the entire Agones GameServer state representation as an encoded json. Additionally, some headers holding information about event type and event source.
 In the future there may be a event middleware/parser that could extract pieces of information and make the message of customisable. 
 
-
-
-### How to run the broadcaster?
+## How to run the broadcaster?
 
 Requirements
  - Linux or OSX
  - Kubernetes Cluster 1.14 (Supported by Agones 1.15)
  - Agones 1.15
- 
-## The Broker interface
-// Describe the broker interface and how it can be extended or being implemented by different types of backends. Not only message queueing. 
-```go
-// Broker is the service used by the Broadcaster for publishing events
-type Broker interface {
-	BuildEnvelope(event events.Event) (*events.Envelope, error)
-	SendMessage(envelope *events.Envelope) error
-}
-```
+
 
 ## Supported Brokers
 Below you can find a list a supported brokers that can be used for publishing messages.
@@ -89,11 +80,9 @@ Output:
 
 ### Google Cloud Pub/Sub
 
-Publishes messages to a [Google Cloud Pub/Sub](https://cloud.google.com/pubsub/docs/overview) topic.
+Publishes messages to [Google Cloud Pub/Sub](https://cloud.google.com/pubsub/docs/overview) topics.
 
-Be aware that using the service may cost you some money. Check https://cloud.google.com/pubsub/pricing for detailed information. 
-
-If you are just experimenting the project locally, you can use the Google Cloud Pub/Sub emulator https://cloud.google.com/pubsub/docs/emulator.
+Be aware that using the service may cost you some money. Check https://cloud.google.com/pubsub/pricing for detailed information. If you are just experimenting the project locally, you can use the Google Cloud Pub/Sub emulator https://cloud.google.com/pubsub/docs/emulator.
 
 When publishing a message to Pub/Sub the broker will output the information below.
 Output:
@@ -102,25 +91,90 @@ Output:
 ```
 
 Requirements:
-- Service Account Credentials with `PubSub Editor Role` assigned to it. Required for checking if topic exists before publishing.
+- Service Account Credentials with `PubSub Editor` role assigned to it. Required for checking if topic exists before publishing.
 - Topics created beforehand. Use those topics when creating the broker config.
-- Environment variable `PUBSUB_CREDENTIALS`: JsonKey file path
+- Environment variable `PUBSUB_CREDENTIALS`: Json key file path
 
 ***Creating the broker***
 
 The topics can be customised by event source (Add, Update, Delete) or be unique for all types of events.
 
 ```go
+opts := option.WithCredentialsFile(os.Getenv("PUBSUB_CREDENTIALS"))
 broker, err := pubsub.NewPubSubBroker(&pubsub.Config{
     ProjectID:       os.Getenv("PUBSUB_PROJECT_ID"),
-    // GenericTopicID: "gameserver.events" // Alternatively, set one topic to publish all types of events. 
+    // Alternatively, set one topic to publish all types of events.
+    // GenericTopicID: "gameserver.events"  
     OnAddTopicID:    "gameserver.events.added", // Use any available topic you you want 
-    OnUpdateTopicID: "gameserver.events.updated",
-    OnDeleteTopicID: "gameserver.events.deleted",
+    OnUpdateTopicID: "gameserver.events.updated", // Use any available topic you you want
+    OnDeleteTopicID: "gameserver.events.deleted", // Use any available topic you you want
 }, opts)
 ```
 
 ## Development
-// How to run the broadcaster locally
-// Kind? octopsctl?
+
+The steps below provide the instructions for running the broadcaster on your local laptop. We will be using the `stdout ` broker. That means messages will not be published to any remote service. 
+
+Requirements:
+- Kubernetes cluster  
+- Valid `KUBECONFIG`
+- Proper RBAC settings 
+
+```bash 
+$ go run main.go --kubeconfig=$KUBECONFIG
+```
+
+Running Tests
+```bash
+$ make test
+```
+
+## Implementing my own broker
+
+As previously mentioned, you can implement your own broker and plug it to the broadcaster. The broker interface is minimal and can be used for different purposes.
+
+The Broker interface:
+ 
+```go
+// Broker is the service used by the Broadcaster for publishing events
+type Broker interface {
+	BuildEnvelope(event events.Event) (*events.Envelope, error)
+	SendMessage(envelope *events.Envelope) error
+}
+```
+
+Example:
+
+```go
+// Create an instance of the broker and give it to the broadcaster
+
+// Kafka Broker
+import broker ..../brokers/kafka
+
+...
+
+broker := broker.NewKafkaBroker(&broker.Config{})
+gsBroadcaster, err := broadcaster.New(clientConf, broker)
+
+...
+
+err := broadCaster.Start()
+
+// MongoDB Broker
+import broker ..../brokers/kafka
+
+...
+
+broker := mongodb.NewMongoDBBroker(&mongodb.Config{})
+gsBroadcaster, err := broadcaster.New(clientConf, broker)
+
+...
+
+ err := broadCaster.Start()
+```
+
+## Deploying
+RBAC, Manifests, 
+
+
 
