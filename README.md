@@ -129,8 +129,11 @@ Requirements:
 $ go run main.go --kubeconfig=$KUBECONFIG
 ```
 
-On another terminal session push GameServers manifests to the Kubernetes API. You can use one from the `examples` folder.
-Check the broadcaster output for details. 
+Running
+
+On another terminal session push the GameServers manifest to the Kubernetes API. You can use [examples/gameservers/agones-udp.yaml](examples/gameservers/agones-udp.yaml) for a simple game server.
+
+Apply the manifest and check the broadcaster output for details.
 ```bash
 # Triggers Add and Update events
 $ kubectl apply -f examples/agones-udp.yaml
@@ -139,7 +142,7 @@ $ kubectl apply -f examples/agones-udp.yaml
 $ kubectl delete -f examples/agones-udp.yaml
 ```
 
-Running Tests
+Tests
 ```bash
 $ make test
 ```
@@ -176,7 +179,7 @@ gsBroadcaster, err := broadcaster.New(clientConf, broker)
 err := broadCaster.Start()
 
 // MongoDB Broker
-import broker ..../brokers/kafka
+import broker ..../brokers/mongodb
 
 ...
 
@@ -189,6 +192,9 @@ gsBroadcaster, err := broadcaster.New(clientConf, broker)
 ```
 
 ## Deploying
+
+Build docker image
+
 RBAC, Manifests, 
 
 
