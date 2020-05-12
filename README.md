@@ -47,7 +47,7 @@ The broadcaster implements the [Kubernetes Controller Pattern](https://kubernete
 For every single time the state of a resource of type GameServer has changed, the broadcaster will be notified. Therefore, it will handle the event and publish a message using a Broker.
 Currently, the controller watches GameServers deployed on any namespace. It may change in the future if that becomes a performance issue.
 
-### What kind of events are tracked?
+### What kind of events will be tracked?
 The broadcaster watches for Add, Update and Delete events.
 - Add: When a new GameServer is deployed by Agones
 - Update: When the GameServer state changes by changing any information from its specification.
@@ -56,14 +56,6 @@ The broadcaster watches for Add, Update and Delete events.
 ### What does the event message content look like?
 The current version of the broadcaster sends the entire Agones GameServer state representation as an encoded json. Additionally, some headers holding information about event type and event source.
 In the future there may be a event middleware/parser that could extract pieces of information and make the message of customisable. 
-
-## How to run the broadcaster?
-
-Requirements
- - Linux or OSX
- - Kubernetes Cluster 1.14 (Supported by Agones 1.15)
- - Agones 1.15
-
 
 ## Supported Brokers
 Below you can find a list a supported brokers that can be used for publishing messages.
@@ -85,6 +77,7 @@ Publishes messages to [Google Cloud Pub/Sub](https://cloud.google.com/pubsub/doc
 Be aware that using the service may cost you some money. Check https://cloud.google.com/pubsub/pricing for detailed information. If you are just experimenting the project locally, you can use the Google Cloud Pub/Sub emulator https://cloud.google.com/pubsub/docs/emulator.
 
 When publishing a message to Pub/Sub the broker will output the information below.
+
 Output:
 ```bash
 {"broker":"pubsub","message":"message published to topicID:\"gameserver.events.added\" messageID:\"20\"","severity":"info","time":"2020-05-11T19:41:57.607351+02:00"}
@@ -116,24 +109,87 @@ Check the [`examples/pubsub/main.go`](examples/pubsub/main.go) file for a comple
 $ go run examples/pubsub/main.go 
 ```
 
+## How to run the GameServer Events Broadcaster?
+
+Requirements
+ - Linux or OSX
+ - Kubernetes Cluster 1.14 (Supported by Agones 1.15)
+ - Agones 1.15
+ - Kubeconfig
+
+The default broker is the `stdout`. That means messages showing up from the application output.
+
+From Source
+```bash
+$ git clone https://github.com/Octops/gameserver-events-broadcaster.git
+$ go run main.go --kubeconfig=${KUBECONFIG}
+```
+
+Docker
+
+```bash
+# Building the docker image locally
+$ make docker
+
+OR
+
+# Using an image from Docker Hub
+1. Make sure your $KUBECONFIG points to the right cluster
+2. The Kubernetes API must be reacheable by the container. That means 127.0.0.1 will not work, unless you run the docker container using the host network
+$ docker run -it --rm --name broadcaster \
+    -v ${KUBECONFIG}:/app/config \
+    -e KUBECONFIG=/app/config \
+    octops/gameserver-events-broadcaster:v0.1-alpha --kubeconfig=/app/config
+```
+
+## Deploying
+
+Build docker image
+```bash
+$ export DOCKER_IMAGE_TAG=YOUR_REPO_NAME/IMAGE_NAME:TAG
+$ make docker
+$ docker push ${DOCKER_IMAGE_TAG}
+```
+
+Deploy the Broadcaster
+
+```bash
+# Change the image name from the manifest before applying it
+kubectl apply -f examples/manifests/gameserver-events-broadcaster.yaml
+
+# Check logs
+kubectl logs -f [POD_NAME]
+``` 
+
+Deploy the GameServer
+
+```bash
+# Triggers Add and Update events
+$ kubectl apply -f examples/agones-udp.yaml
+
+# Triggers a Delete event
+$ kubectl delete -f examples/agones-udp.yaml
+```
+
 ## Development
 
 The steps below provide the instructions for running the broadcaster on your local laptop. We will be using the `stdout ` broker. That means messages will not be published to any remote service. 
 
 Requirements:
-- Kubernetes cluster  
-- Valid `KUBECONFIG`
-- Proper RBAC settings 
+ - Kubernetes Cluster 1.14 (Supported by Agones 1.15)
+ - Agones 1.15
+ - Kubeconfig
+
+Running
 
 ```bash 
 $ go run main.go --kubeconfig=$KUBECONFIG
 ```
 
-Running
-
-On another terminal session push the GameServers manifest to the Kubernetes API. You can use [examples/gameservers/agones-udp.yaml](examples/gameservers/agones-udp.yaml) for a simple game server.
+On another terminal session, push the GameServers manifest to the Kubernetes API. You can use [examples/gameservers/agones-udp.yaml](examples/gameservers/agones-udp.yaml) for a simple game server.
 
 Apply the manifest and check the broadcaster output for details.
+
 ```bash
 # Triggers Add and Update events
 $ kubectl apply -f examples/agones-udp.yaml
@@ -160,6 +216,25 @@ type Broker interface {
 	SendMessage(envelope *events.Envelope) error
 }
 ```
+
+## Identifying the source and type of the event:
+
+When implementing brokers this information may help on the implementation of the broker's logic.
+Being able to differentiate between types of events can define for example to which topic the message should be published.
+The same logic applies to brokers that use a different type of backend. 
+
+```go
+type Event interface {
+    EventSource() EventSource // the controller event name: OnAdd, OnUpdate, OnDelete
+    EventType() EventType // the resource event type (GameServer): gameserver.events.added, gameserver.events.updated, gameserver.events.deleted
+}
+
+// Values: OnAdd, OnUpdate, OnDelete
+eventSource := event.EventSource() 
+
+// Values: gameserver.events.added, gameserver.events.updated, gameserver.events.deleted
+eventType := event.EventType().String()
+``` 
 
 Example:
 
@@ -190,12 +265,3 @@ gsBroadcaster, err := broadcaster.New(clientConf, broker)
 
  err := broadCaster.Start()
 ```
-
-## Deploying
-
-Build docker image
-
-RBAC, Manifests, 
-
-
-
