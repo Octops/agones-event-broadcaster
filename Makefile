@@ -34,6 +34,8 @@ TESTS    := $(shell find internal cmd -name '*.go' -type f -not -name '*.pb.go' 
 
 BROADCASTER_BIN := bin/broadcaster
 
+DOCKER_IMAGE_TAG ?= octops/gameserver-events-broadcaster:v0.1-alpha
+
 default: clean build
 
 build: clean $(BROADCASTER_BIN)
@@ -84,3 +86,9 @@ bench:
 
 vendor:
 	$(GO) mod vendor
+
+docker:
+	docker build -t $(DOCKER_IMAGE_TAG) .
+
+push: docker
+	docker push $(DOCKER_IMAGE_TAG)
