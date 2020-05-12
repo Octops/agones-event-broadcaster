@@ -18,10 +18,9 @@ package cmd
 import (
 	"fmt"
 	"github.com/Octops/gameserver-events-broadcaster/pkg/broadcaster"
-	"github.com/Octops/gameserver-events-broadcaster/pkg/brokers/pubsub"
+	"github.com/Octops/gameserver-events-broadcaster/pkg/brokers/stdout"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"google.golang.org/api/option"
 	"k8s.io/client-go/tools/clientcmd"
 	"os"
 
@@ -47,18 +46,18 @@ var rootCmd = &cobra.Command{
 		clientConf, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 
 		// Used only for debugging purpose
-		//broker := &stdout.StdoutBroker{}
+		broker := &stdout.StdoutBroker{}
 
-		opts := option.WithCredentialsFile(os.Getenv("PUBSUB_CREDENTIALS"))
-		broker, err := pubsub.NewPubSubBroker(&pubsub.Config{
-			ProjectID:       os.Getenv("PUBSUB_PROJECT_ID"),
-			OnAddTopicID:    "gameserver.events.added",
-			OnUpdateTopicID: "gameserver.events.updated",
-			OnDeleteTopicID: "gameserver.events.deleted",
-		}, opts)
-		if err != nil {
-			logrus.WithError(err).Fatal("error creating broker")
-		}
+		//opts := option.WithCredentialsFile(os.Getenv("PUBSUB_CREDENTIALS"))
+		//broker, err := pubsub.NewPubSubBroker(&pubsub.Config{
+		//	ProjectID:       os.Getenv("PUBSUB_PROJECT_ID"),
+		//	OnAddTopicID:    "gameserver.events.added",
+		//	OnUpdateTopicID: "gameserver.events.updated",
+		//	OnDeleteTopicID: "gameserver.events.deleted",
+		//}, opts)
+		//if err != nil {
+		//	logrus.WithError(err).Fatal("error creating broker")
+		//}
 
 		gsBroadcaster, err := broadcaster.New(clientConf, broker)
 		if err != nil {
