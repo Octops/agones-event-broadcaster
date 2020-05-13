@@ -6,6 +6,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// StdoutBroker is a log based broker that doesn't publish to any remove message service.
+// The SendMessage method will only output to stdout.
 type StdoutBroker struct {
 }
 

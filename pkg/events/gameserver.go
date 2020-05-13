@@ -8,12 +8,15 @@ var (
 
 type GameServerEventType string
 
+// GameServerEvent is the data structure for reconcile events associated with Agones GameServers
+// It holds the event source (OnAdd, OnUpdate, OnDelete) and the event type (Added, Updated, Deleted).
 type GameServerEvent struct {
 	Source EventSource
 	Type   GameServerEventType
 	Message
 }
 
+// GameServerAdded is the data structure for reconcile events of type Add
 func GameServerAdded(message Message) *GameServerEvent {
 	return &GameServerEvent{
 		Source:  EventSourceOnAdd,
@@ -22,6 +25,7 @@ func GameServerAdded(message Message) *GameServerEvent {
 	}
 }
 
+// GameServerUpdates is the data structure for reconcile events of type Update
 func GameServerUpdated(message Message) *GameServerEvent {
 	return &GameServerEvent{
 		Source:  EventSourceOnUpdate,
@@ -30,6 +34,7 @@ func GameServerUpdated(message Message) *GameServerEvent {
 	}
 }
 
+// GameServerDeleted is the data structure for reconcile events of type Delete
 func GameServerDeleted(message Message) *GameServerEvent {
 	return &GameServerEvent{
 		Source:  EventSourceOnDelete,
@@ -38,14 +43,19 @@ func GameServerDeleted(message Message) *GameServerEvent {
 	}
 }
 
+// EventType returns the type of the reconcile event for a GameServer.
+// For example: Added, Updated, Deleted
 func (t *GameServerEvent) EventType() EventType {
 	return EventType(t.Type)
 }
 
+// EventSource return the event source that generated the event.
+// For example: OnAdd, OnUpdate, OnDelete
 func (t *GameServerEvent) EventSource() EventSource {
 	return t.Source
 }
 
+// String is a helper method that returns the string version of a GameServerType
 func (t GameServerEventType) String() string {
 	return string(t)
 }
