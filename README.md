@@ -1,6 +1,6 @@
 # [Alpha] GameServer Events Broadcaster
 
-Broadcast Agones GameServer reconcile events using a message queueing service (or any other implementation of the Broker).
+Broadcast Agones GameServer events using a message queueing service (or any other implementation of the Broker).
 
 ### Agones
 > An open source, batteries-included, multiplayer dedicated game server scaling and orchestration platform that can run anywhere Kubernetes can run.
@@ -144,7 +144,9 @@ $ docker run -it --rm --name broadcaster \
 
 ## Deploying
 
-Build docker image
+[Optional] Build docker image
+
+This step is only required if you are not using the publi image hosted on DockerHub.
 ```bash
 $ export DOCKER_IMAGE_TAG=YOUR_REPO_NAME/IMAGE_NAME:TAG
 $ make docker
@@ -155,10 +157,10 @@ Deploy the Broadcaster
 
 ```bash
 # Change the image name from the manifest before applying it
-kubectl apply -f examples/manifests/gameserver-events-broadcaster.yaml
+$ kubectl apply -f install/broadcaster-install.yaml
 
 # Check logs
-kubectl logs -f [POD_NAME]
+$ kubectl logs -f [POD_NAME]
 ``` 
 
 Deploy the GameServer
@@ -169,6 +171,12 @@ $ kubectl apply -f examples/agones-udp.yaml
 
 # Triggers a Delete event
 $ kubectl delete -f examples/agones-udp.yaml
+```
+
+Destroy
+
+```bash
+$ kubectl delete -f install/broadcaster-install.yaml
 ```
 
 ## Development
