@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gameserver-events-controller
+  labels:
+    app: gameserver-events-broadcaster
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: gameserver-events-controller
+  labels:
+    app: gameserver-events-broadcaster
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["list", "watch"]
+  - apiGroups: ["agones.dev"]
+    resources: ["gameservers",]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: gameserver-events-controller
+  labels:
+    app: gameserver-events-broadcaster
+subjects:
+  - kind: User
+    name: system:serviceaccount:default:gameserver-events-controller
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: gameserver-events-controller
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gameserver-events-controller
+  labels:
+    component: controller
+    app: gameserver-events-broadcaster
+spec:
+  selector:
+    matchLabels:
+      app: gameserver-events-broadcaster
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: gameserver-events-broadcaster
+    spec:
+      serviceAccountName: gameserver-events-controller
+      containers:
+        - name: gameserver-events-controller
+          image: "octops/gameserver-events-broadcaster:v0.1-alpha"
+          imagePullPolicy: IfNotPresent
