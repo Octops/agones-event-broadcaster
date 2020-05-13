@@ -7,6 +7,9 @@ Broadcast Agones GameServer events using a message queueing service (or any othe
 
 You can find a great documentation on https://agones.dev/site/
 
+## Important
+The project is currently in Alpha stage and subject to change. Pull requests and issues are more than welcome and really appreciated.
+
 ### Use Cases
 The most common use case is for folks who want to extract information about their Agones GameServers running within Kubernetes.
 Using the broadcaster, you can have one single point of extraction and publish it to different destinations.
@@ -86,7 +89,7 @@ Output:
 Requirements:
 - Service Account Credentials with `PubSub Editor` role assigned to it. Required for checking if topic exists before publishing.
 - Topics created beforehand. Use those topics when creating the broker config.
-- Environment variable `PUBSUB_CREDENTIALS`: Json key file path
+- Environment variable `PUBSUB_CREDENTIALS`: Json key file path (if running outside of the cluster)
 
 ***Creating the broker***
 
@@ -146,7 +149,7 @@ $ docker run -it --rm --name broadcaster \
 
 [Optional] Build docker image
 
-This step is only required if you are not using the publi image hosted on DockerHub.
+This step is only required if you are not using the public image hosted on [DockerHub](https://hub.docker.com/repository/docker/octops/gameserver-events-broadcaster).
 ```bash
 $ export DOCKER_IMAGE_TAG=YOUR_REPO_NAME/IMAGE_NAME:TAG
 $ make docker
@@ -156,8 +159,13 @@ $ docker push ${DOCKER_IMAGE_TAG}
 Deploy the Broadcaster
 
 ```bash
-# Change the image name from the manifest before applying it
+# If required, change the image name from the manifest before applying it
 $ kubectl apply -f install/broadcaster-install.yaml
+
+# Manifest that uses the Pub/Sub broker. Check the manifest content and provide the right information about ProjectID.
+# The cluster where the broadcaster is going to be deployed requires the proper IAM that has Pub/Sub Editor role assigned ot it.
+$ kubectl apply -f install/broadcaster-install-pubsub.yaml
+
 
 # Check logs
 $ kubectl logs -f [POD_NAME]
@@ -273,3 +281,9 @@ gsBroadcaster, err := broadcaster.New(clientConf, broker)
 
  err := broadCaster.Start()
 ```
+
+## Contributions
+
+The GameServer Events Broadcaster is currently in Alpha stage. We would love to hear some feedback and use cases that could help improve this project.
+
+Feel free to open an issue if you see mistakes, errors and problems with the documentation.
