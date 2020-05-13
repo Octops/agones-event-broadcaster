@@ -18,9 +18,12 @@ package cmd
 import (
 	"fmt"
 	"github.com/Octops/gameserver-events-broadcaster/pkg/broadcaster"
+	"github.com/Octops/gameserver-events-broadcaster/pkg/brokers"
+	"github.com/Octops/gameserver-events-broadcaster/pkg/brokers/pubsub"
 	"github.com/Octops/gameserver-events-broadcaster/pkg/brokers/stdout"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"google.golang.org/api/option"
 	"k8s.io/client-go/tools/clientcmd"
 	"os"
 
@@ -32,6 +35,7 @@ var (
 	cfgFile    string
 	kubeconfig string
 	verbose    bool
+	brokerFlag string
 )
 
 var rootCmd = &cobra.Command{
@@ -45,19 +49,29 @@ var rootCmd = &cobra.Command{
 
 		clientConf, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 
-		// Used only for debugging purpose
-		broker := &stdout.StdoutBroker{}
+		var broker brokers.Broker
+		var opts []option.ClientOption
 
-		//opts := option.WithCredentialsFile(os.Getenv("PUBSUB_CREDENTIALS"))
-		//broker, err := pubsub.NewPubSubBroker(&pubsub.Config{
-		//	ProjectID:       os.Getenv("PUBSUB_PROJECT_ID"),
-		//	OnAddTopicID:    "gameserver.events.added",
-		//	OnUpdateTopicID: "gameserver.events.updated",
-		//	OnDeleteTopicID: "gameserver.events.deleted",
-		//}, opts)
-		//if err != nil {
-		//	logrus.WithError(err).Fatal("error creating broker")
-		//}
+		if brokerFlag == "pubsub" {
+			// If the broadcaster is running within GCP, credentials don't need to be explicitly passed
+			// Setting this environment variable is optional. The Service Accounts attached to the worker node should be able to perform the operation via IAM settings.
+			if os.Getenv("PUBSUB_CREDENTIALS") != "" {
+				opts = append(opts, option.WithCredentialsFile(os.Getenv("PUBSUB_CREDENTIALS")))
+			}
+
+			broker, err = pubsub.NewPubSubBroker(&pubsub.Config{
+				ProjectID:       os.Getenv("PUBSUB_PROJECT_ID"),
+				OnAddTopicID:    "gameserver.events.added",
+				OnUpdateTopicID: "gameserver.events.updated",
+				OnDeleteTopicID: "gameserver.events.deleted",
+			}, opts...)
+			if err != nil {
+				logrus.WithError(err).Fatal("error creating broker")
+			}
+		} else {
+			// Used only for debugging purpose
+			broker = &stdout.StdoutBroker{}
+		}
 
 		gsBroadcaster, err := broadcaster.New(clientConf, broker)
 		if err != nil {
@@ -82,6 +96,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gameserver-events-broadcaster.yaml)")
 	rootCmd.Flags().StringVar(&kubeconfig, "kubeconfig", "", "Set KUBECONFIG")
+	rootCmd.Flags().StringVar(&brokerFlag, "broker", "", "The type of the broker to be used by the broadcaster")
 	rootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Set log level to verbose, defaults to false")
 }
 
