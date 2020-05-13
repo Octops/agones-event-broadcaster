@@ -156,7 +156,7 @@ func (r *reconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) 
 	gameServer := &agonesv1.GameServer{}
 	if err := r.Get(ctx, req.NamespacedName, gameServer); err != nil {
 		if apierrors.IsNotFound(err) {
-			logrus.WithError(err).Error()
+			logrus.Debugf("GameServer.agones.dev \"%s\" not found", req.NamespacedName)
 			return ctrl.Result{}, nil
 		}
 
