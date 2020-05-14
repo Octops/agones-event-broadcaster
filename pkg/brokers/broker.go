@@ -1,6 +1,6 @@
 package brokers
 
-import "github.com/Octops/gameserver-events-broadcaster/pkg/events"
+import "github.com/Octops/agones-event-broadcaster/pkg/events"
 
 // Broker is the service used by the Broadcaster for publishing events
 type Broker interface {

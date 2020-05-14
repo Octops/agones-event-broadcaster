@@ -17,7 +17,7 @@ else
     SED := sed
 endif
 
-PKG_NAME=github.com/Octops/gameserver-events-broadcaster
+PKG_NAME=github.com/Octops/agones-event-broadcaster
 
 LDFLAGS := -X "${PKG_NAME}/internal/version.Version=${VERSION}"
 LDFLAGS += -X "${PKG_NAME}/internal/version.BuildTS=$(shell date -u '+%Y-%m-%d %I:%M:%S')"
@@ -34,7 +34,7 @@ TESTS    := $(shell find internal cmd -name '*.go' -type f -not -name '*.pb.go' 
 
 BROADCASTER_BIN := bin/broadcaster
 
-DOCKER_IMAGE_TAG ?= octops/gameserver-events-broadcaster:v0.1-alpha
+DOCKER_IMAGE_TAG ?= octops/agones-event-broadcaster:v0.1-alpha
 
 default: clean build
 

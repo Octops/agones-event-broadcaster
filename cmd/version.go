@@ -17,7 +17,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/Octops/gameserver-events-broadcaster/internal/version"
+	"github.com/Octops/agones-event-broadcaster/internal/version"
 	"github.com/spf13/cobra"
 )
 

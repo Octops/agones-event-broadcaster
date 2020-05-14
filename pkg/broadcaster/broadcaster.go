@@ -1,10 +1,10 @@
 package broadcaster
 
 import (
-	"github.com/Octops/gameserver-events-broadcaster/pkg/brokers"
-	"github.com/Octops/gameserver-events-broadcaster/pkg/controller"
-	"github.com/Octops/gameserver-events-broadcaster/pkg/events"
-	"github.com/Octops/gameserver-events-broadcaster/pkg/runtime/log"
+	"github.com/Octops/agones-event-broadcaster/pkg/brokers"
+	"github.com/Octops/agones-event-broadcaster/pkg/controller"
+	"github.com/Octops/agones-event-broadcaster/pkg/events"
+	"github.com/Octops/agones-event-broadcaster/pkg/runtime/log"
 	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"

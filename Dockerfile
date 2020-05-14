@@ -1,6 +1,6 @@
 FROM golang:1.14 AS builder
 
-WORKDIR /go/src/github.com/Octops/gameserver-events-broadcaster
+WORKDIR /go/src/github.com/Octops/agones-event-broadcaster
 
 COPY . .
 
@@ -10,7 +10,7 @@ FROM alpine
 
 WORKDIR /app
 
-COPY --from=builder /go/src/github.com/Octops/gameserver-events-broadcaster/bin/broadcaster /app/
+COPY --from=builder /go/src/github.com/Octops/agones-event-broadcaster/bin/broadcaster /app/
 
 RUN chmod +x broadcaster
 

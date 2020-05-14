@@ -2,7 +2,7 @@ package stdout
 
 import (
 	"encoding/json"
-	"github.com/Octops/gameserver-events-broadcaster/pkg/events"
+	"github.com/Octops/agones-event-broadcaster/pkg/events"
 	"github.com/sirupsen/logrus"
 )
 
