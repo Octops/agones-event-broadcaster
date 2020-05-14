@@ -1,0 +1,80 @@
+{
+  "header": {
+    "headers": {
+      "event_type": "gameserver.events.added",
+      "pubsub_topic_id": "us-central1.gameserver.events.added",
+      "pubsub_project_id": "calm-weather-12345"
+    }
+  },
+  "message": {
+    "metadata": {
+      "name": "simple-udp-agones",
+      "namespace": "default",
+      "selfLink": "/apis/agones.dev/v1/namespaces/default/gameservers/simple-udp-agones",
+      "uid": "9be8db9b-95fe-11ea-ab97-0242ac110002",
+      "resourceVersion": "1178858",
+      "generation": 1,
+      "creationTimestamp": "2020-05-14T16:18:55Z",
+      "annotations": {
+        "agones.dev/sdk-version": "1.5.0",
+        "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"agones.dev/v1\",\"kind\":\"GameServer\",\"metadata\":{\"annotations\":{},\"name\":\"simple-udp-agones\",\"namespace\":\"default\"},\"spec\":{\"ports\":[{\"containerPort\":7654,\"name\":\"default\",\"portPolicy\":\"Dynamic\"}],\"template\":{\"spec\":{\"containers\":[{\"image\":\"gcr.io/agones-images/udp-server:0.18\",\"name\":\"simple-udp\",\"resources\":{\"limits\":{\"cpu\":\"20m\",\"memory\":\"32Mi\"},\"requests\":{\"cpu\":\"20m\",\"memory\":\"32Mi\"}}}]}}}}\n"
+      },
+      "finalizers": [
+        "agones.dev"
+      ]
+    },
+    "spec": {
+      "container": "simple-udp",
+      "ports": [
+        {
+          "name": "default",
+          "portPolicy": "Dynamic",
+          "containerPort": 7654,
+          "protocol": "UDP"
+        }
+      ],
+      "health": {
+        "periodSeconds": 5,
+        "failureThreshold": 3,
+        "initialDelaySeconds": 5
+      },
+      "scheduling": "Packed",
+      "sdkServer": {
+        "logLevel": "Info",
+        "grpcPort": 9357,
+        "httpPort": 9358
+      },
+      "template": {
+        "metadata": {
+          "creationTimestamp": null
+        },
+        "spec": {
+          "containers": [
+            {
+              "name": "simple-udp",
+              "image": "gcr.io/agones-images/udp-server:0.18",
+              "resources": {
+                "limits": {
+                  "cpu": "20m",
+                  "memory": "32Mi"
+                },
+                "requests": {
+                  "cpu": "20m",
+                  "memory": "32Mi"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "status": {
+      "state": "PortAllocation",
+      "ports": null,
+      "address": "",
+      "nodeName": "",
+      "reservedUntil": null,
+      "players": null
+    }
+  }
+}
