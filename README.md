@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/Octops/agones-event-broadcaster.svg?branch=master)](https://travis-ci.com/Octops/agones-event-broadcaster)
+
 # [Alpha] Agones Event Broadcaster
 
 Broadcast Agones GameServer events using a message queueing service (or any other implementation of the Broker).
