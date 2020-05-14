@@ -59,8 +59,33 @@ The broadcaster watches for Add, Update and Delete events.
 - Delete: When the GameServer is deleted from the Kubernetes cluster
 
 ### What does the event message content look like?
-The current version of the broadcaster sends the entire Agones GameServer state representation as an encoded json. Additionally, some headers holding information about event type and event source.
-In the future, there may be an event middleware/parser that could extract pieces of information and make the message of customisable. 
+The current version of the broadcaster sends the entire Agones GameServer state representation as an encoded json. Additionally, some headers containing information about event type (Add, Update or Delete) and custom attributes added by the broker.
+In the future, there may be an event middleware/parser that could extract pieces of information and generate custom messages.
+
+As an example, the Pub/Sub broker builds a header that contains information about the destination topic, the type of the event and the projectID. 
+That information wil be used by the broker when performing the `SendMessage` operation. 
+
+```json
+ {
+  "header": {
+    "headers": {
+      "event_type": "gameserver.events.added",
+      "pubsub_topic_id": "us-central1.gameserver.events.added",
+      "pubsub_project_id": "calm-weather-12345"
+    }
+  },
+  "message": {
+    ... 
+    // Agones GameServer state representation
+    ...
+  }
+}
+```
+
+Below you can find examples of messages published to different Pub/Sub topics.
+- OnAdd: [add-gameserver.json](examples/messages/add-gameserver.json)
+- OnUpdate: [update-gameserver.json](examples/messages/update-gameserver.json)
+- OnDelete: [delete-gameserver.json](examples/messages/delete-gameserver.json)
 
 ## Supported Brokers
 Below you can find a list of supported brokers that can be used for publishing messages.
