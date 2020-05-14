@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "github.com/Octops/gameserver-events-broadcaster/cmd"
+import "github.com/Octops/agones-event-broadcaster/cmd"
 
 func main() {
 	cmd.Execute()

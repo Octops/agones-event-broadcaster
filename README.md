@@ -1,23 +1,23 @@
-# [Alpha] GameServer Events Broadcaster
+# [Alpha] Agones Event Broadcaster
 
 Broadcast Agones GameServer events using a message queueing service (or any other implementation of the Broker).
 
 ### Agones
 > An open source, batteries-included, multiplayer dedicated game server scaling and orchestration platform that can run anywhere Kubernetes can run.
 
-You can find a great documentation on https://agones.dev/site/
+You can find great documentation on https://agones.dev/site/
 
 ## Important
-The project is currently in Alpha stage and subject to change. Pull requests and issues are more than welcome and really appreciated.
+The project is currently in the Alpha stage and subject to change. Pull requests and issues are more than welcome and appreciated.
 
 ### Use Cases
 The most common use case is for folks who want to extract information about their Agones GameServers running within Kubernetes.
 Using the broadcaster, you can have one single point of extraction and publish it to different destinations.
 
 Currently, the project supports Google Cloud Pub/Sub. However, this can be extended to any kind of backend.
-Your implementation of the broker can publish the event to databases, message queueing services, request REST APIs, communicate with gRPC services, etc. There is virtually no restrictions.    
+Your implementation of the broker can publish the event to databases, message queueing services, request REST APIs, communicate with gRPC services, etc. There are virtually no restrictions.    
 
-You don't need/use/require a message queuing service? We got you covered. Implement your own broker and plug it to the broadcaster.
+You don't need/use/require a message queuing service? We got you covered. Implement your broker and plug it to the broadcaster.
 Possible, but not limited, ideas for brokers are:
 - MongoDB
 - Elasticsearch
@@ -33,7 +33,7 @@ Possible, but not limited, ideas for brokers are:
 - BigData
 - Google Cloud Datastore
 - Game server backend
-- Match maker
+- Matchmaker
 - ...
 
 ## FAQ
@@ -42,7 +42,7 @@ For the broadcaster, an event is some sort of information that reflects a GameSe
 
 ### How/Where events can be emitted?
 The source of events can vary depending on the action which triggered those. For instance, when a GameServer is deployed it might change its state many times.
-From the port allocation to the ready state, information will be added and updated. I.e.: Address and port, status and labels.
+From the port allocation to the ready state, the information will be added and updated. I.e.: Address and port, status and labels.
 
 ### Who is responsible for watching events from the Kubernetes API?
 The broadcaster implements the [Kubernetes Controller Pattern](https://kubernetes.io/docs/concepts/architecture/controller/#controller-pattern). It tracks events for resources of type GameServer.
@@ -58,10 +58,10 @@ The broadcaster watches for Add, Update and Delete events.
 
 ### What does the event message content look like?
 The current version of the broadcaster sends the entire Agones GameServer state representation as an encoded json. Additionally, some headers holding information about event type and event source.
-In the future there may be a event middleware/parser that could extract pieces of information and make the message of customisable. 
+In the future, there may be an event middleware/parser that could extract pieces of information and make the message of customisable. 
 
 ## Supported Brokers
-Below you can find a list a supported brokers that can be used for publishing messages.
+Below you can find a list of supported brokers that can be used for publishing messages.
 
 ### Logging - Stdout [Development purpose]
 Only outputs the content of the message to the application `stdout`.
@@ -77,7 +77,7 @@ Output:
 
 Publishes messages to [Google Cloud Pub/Sub](https://cloud.google.com/pubsub/docs/overview) topics.
 
-Be aware that using the service may cost you some money. Check https://cloud.google.com/pubsub/pricing for detailed information. If you are just experimenting the project locally, you can use the Google Cloud Pub/Sub emulator https://cloud.google.com/pubsub/docs/emulator.
+Be aware that using the service may cost you some money. Check https://cloud.google.com/pubsub/pricing for detailed information. If you are just experimenting with the project locally, you can use the Google Cloud Pub/Sub emulator https://cloud.google.com/pubsub/docs/emulator.
 
 When publishing a message to Pub/Sub the broker will output the information below.
 
@@ -87,7 +87,7 @@ Output:
 ```
 
 Requirements:
-- Service Account Credentials with `PubSub Editor` role assigned to it. Required for checking if topic exists before publishing.
+- Service Account Credentials with `PubSub Editor` role assigned to it. Required for checking if the topic exists before publishing.
 - Topics created beforehand. Use those topics when creating the broker config.
 - Environment variable `PUBSUB_CREDENTIALS`: Json key file path (if running outside of the cluster)
 
@@ -124,7 +124,7 @@ The default broker is the `stdout`. That means messages showing up from the appl
 
 From Source
 ```bash
-$ git clone https://github.com/Octops/gameserver-events-broadcaster.git
+$ git clone https://github.com/Octops/agones-event-broadcaster.git
 $ go run main.go --kubeconfig=${KUBECONFIG}
 ```
 
@@ -138,18 +138,18 @@ OR
 
 # Using an image from Docker Hub
 1. Make sure your $KUBECONFIG points to the right cluster
-2. The Kubernetes API must be reacheable by the container. That means 127.0.0.1 will not work, unless you run the docker container using the host network
+2. The Kubernetes API must be reachable by the container. That means 127.0.0.1 will not work unless you run the docker container using the host network
 $ docker run -it --rm --name broadcaster \
     -v ${KUBECONFIG}:/app/config \
     -e KUBECONFIG=/app/config \
-    octops/gameserver-events-broadcaster:v0.1-alpha --kubeconfig=/app/config
+    octops/agones-event-broadcaster:v0.1-alpha --kubeconfig=/app/config
 ```
 
 ## Deploying
 
 [Optional] Build docker image
 
-This step is only required if you are not using the public image hosted on [DockerHub](https://hub.docker.com/repository/docker/octops/gameserver-events-broadcaster).
+This step is only required if you are not using the public image hosted on [DockerHub](https://hub.docker.com/repository/docker/octops/agones-event-broadcaster).
 ```bash
 $ export DOCKER_IMAGE_TAG=YOUR_REPO_NAME/IMAGE_NAME:TAG
 $ make docker
@@ -163,7 +163,7 @@ Deploy the Broadcaster
 $ kubectl apply -f install/broadcaster-install.yaml
 
 # Manifest that uses the Pub/Sub broker. Check the manifest content and provide the right information about ProjectID.
-# The cluster where the broadcaster is going to be deployed requires the proper IAM that has Pub/Sub Editor role assigned ot it.
+# The cluster where the broadcaster is going to be deployed requires the proper IAM that has Pub/Sub Editor role assigned to it.
 $ kubectl apply -f install/broadcaster-install-pubsub.yaml
 
 
@@ -219,17 +219,17 @@ Tests
 $ make test
 ```
 
-## Implementing my own broker
+## Implementing my broker
 
-As previously mentioned, you can implement your own broker and plug it to the broadcaster. The broker interface is minimal and can be used for different purposes.
+As previously mentioned, you can implement your broker and plug it to the broadcaster. The broker interface is minimal and can be used for different purposes.
 
 The Broker interface:
  
 ```go
 // Broker is the service used by the Broadcaster for publishing events
 type Broker interface {
-	BuildEnvelope(event events.Event) (*events.Envelope, error)
-	SendMessage(envelope *events.Envelope) error
+   BuildEnvelope(event events.Event) (*events.Envelope, error)
+   SendMessage(envelope *events.Envelope) error
 }
 ```
 

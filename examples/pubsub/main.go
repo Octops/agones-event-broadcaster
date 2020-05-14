@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/Octops/gameserver-events-broadcaster/pkg/broadcaster"
-	"github.com/Octops/gameserver-events-broadcaster/pkg/brokers/pubsub"
+	"github.com/Octops/agones-event-broadcaster/pkg/broadcaster"
+	"github.com/Octops/agones-event-broadcaster/pkg/brokers/pubsub"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/api/option"
 	"k8s.io/client-go/tools/clientcmd"

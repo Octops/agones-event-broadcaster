@@ -4,8 +4,8 @@ import (
 	"cloud.google.com/go/pubsub"
 	"context"
 	"fmt"
-	"github.com/Octops/gameserver-events-broadcaster/pkg/brokers"
-	"github.com/Octops/gameserver-events-broadcaster/pkg/events"
+	"github.com/Octops/agones-event-broadcaster/pkg/brokers"
+	"github.com/Octops/agones-event-broadcaster/pkg/events"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/api/option"
 )

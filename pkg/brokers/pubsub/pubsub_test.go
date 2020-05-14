@@ -3,7 +3,7 @@ package pubsub
 import (
 	"cloud.google.com/go/pubsub"
 	"context"
-	"github.com/Octops/gameserver-events-broadcaster/pkg/events"
+	"github.com/Octops/agones-event-broadcaster/pkg/events"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"reflect"

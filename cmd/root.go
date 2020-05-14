@@ -17,10 +17,10 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/Octops/gameserver-events-broadcaster/pkg/broadcaster"
-	"github.com/Octops/gameserver-events-broadcaster/pkg/brokers"
-	"github.com/Octops/gameserver-events-broadcaster/pkg/brokers/pubsub"
-	"github.com/Octops/gameserver-events-broadcaster/pkg/brokers/stdout"
+	"github.com/Octops/agones-event-broadcaster/pkg/broadcaster"
+	"github.com/Octops/agones-event-broadcaster/pkg/brokers"
+	"github.com/Octops/agones-event-broadcaster/pkg/brokers/pubsub"
+	"github.com/Octops/agones-event-broadcaster/pkg/brokers/stdout"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"google.golang.org/api/option"
@@ -39,7 +39,7 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "gameserver-events-broadcaster",
+	Use:   "agones-event-broadcaster",
 	Short: "Broadcast Events from Agones GameServers",
 	Long:  `Broadcast Events from Agones GameServers`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -94,7 +94,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gameserver-events-broadcaster.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.agones-event-broadcaster.yaml)")
 	rootCmd.Flags().StringVar(&kubeconfig, "kubeconfig", "", "Set KUBECONFIG")
 	rootCmd.Flags().StringVar(&brokerFlag, "broker", "", "The type of the broker to be used by the broadcaster")
 	rootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Set log level to verbose, defaults to false")
@@ -113,9 +113,9 @@ func initConfig() {
 			os.Exit(1)
 		}
 
-		// Search config in home directory with name ".gameserver-events-broadcaster" (without extension).
+		// Search config in home directory with name ".agones-event-broadcaster" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".gameserver-events-broadcaster")
+		viper.SetConfigName(".agones-event-broadcaster")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

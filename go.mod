@@ -1,4 +1,4 @@
-module github.com/Octops/gameserver-events-broadcaster
+module github.com/Octops/agones-event-broadcaster
 
 go 1.14
 
