@@ -114,7 +114,7 @@ Check the [`examples/pubsub/main.go`](examples/pubsub/main.go) file for a comple
 $ go run examples/pubsub/main.go 
 ```
 
-## How to run the GameServer Events Broadcaster?
+## How to run the Agones Event Broadcaster?
 
 Requirements
  - Linux or OSX
@@ -286,6 +286,6 @@ gsBroadcaster, err := broadcaster.New(clientConf, broker)
 
 ## Contributions
 
-The GameServer Events Broadcaster is currently in Alpha stage. We would love to hear some feedback and use cases that could help improve this project.
+The Agones Event Broadcaster is currently in Alpha stage. We would love to hear some feedback and use cases that could help improve this project.
 
 Feel free to open an issue if you see mistakes, errors and problems with the documentation.
