@@ -56,5 +56,5 @@ spec:
       serviceAccountName: agones-events-controller
       containers:
         - name: agones-events-controller
-          image: "octops/agones-event-broadcaster:v0.1-alpha"
+          image: "octops/agones-event-broadcaster:v0.2-alpha"
           imagePullPolicy: IfNotPresent

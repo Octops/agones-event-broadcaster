@@ -1,0 +1,25 @@
+[ ] Create How To deploy, RBAC, Manifests, etc
+
+[ ] Document methods
+[ ] Add more test
+[ ] Update README
+[x] Create documentation about the Broker interface
+[ ] Implement HTTP Broker
+[ ] Implement MongDB broker
+[ ] Implement AWS SQS Broker
+[ ] Implement RabbitMQ Broker
+[ ] Create demo consumer using Go, NodeJS, C#?
+[ ] Record Demo Publishing and Consuming messages
+[ ] Filter Controller by Namespace, Labels
+[ ] PubSub tests require local Emulator or Cloud topics. Refactor?
+[ ] Consider renaming Broker to Backend for a more generic approach.
+[ ] PubSub - Consider grouping messages before sending out
+[x] Create Dockerfile
+[x] How to extend the broadcaster
+[x] How to create and attach your own Broker/Backend
+[ ] Contributor's guidelines, local development, requirements, Kind+Agones
+[ ] Publish octopsctl?
+[ ] Setup CI
+[ ] Implement message/event parser
+[ ] Broker/Broadcaster generator?
+[ ] Create Helm chart
