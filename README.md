@@ -246,7 +246,7 @@ Tests
 $ make test
 ```
 
-## Implementing my broker
+## Implementing your own broker
 
 As previously mentioned, you can implement your broker and plug it to the broadcaster. The broker interface is minimal and can be used for different purposes.
 
