@@ -13,24 +13,25 @@ import (
 	"time"
 )
 
-type GameServer struct {
-	Name    string            `json:"name"`
-	Labels  map[string]string `json:"labels"`
-	Address string            `json:"addr"`
-	Port    int32             `json:"port"`
-	State   string            `json:"state"`
+type gameserver struct {
+	Name      string            `json:"name"`
+	Namespace string            `json:"namespace"`
+	Labels    map[string]string `json:"labels"`
+	Address   string            `json:"addr"`
+	Port      int32             `json:"port"`
+	State     string            `json:"state"`
 }
 
 type HTTPBroker struct {
 	mutex sync.Mutex
 	addr  string
-	Store map[string]*GameServer
+	Store map[string]*gameserver
 }
 
 func NewHTTPBroker(addr string) *HTTPBroker {
 	return &HTTPBroker{
 		addr:  addr,
-		Store: map[string]*GameServer{},
+		Store: map[string]*gameserver{},
 	}
 }
 
@@ -100,12 +101,12 @@ func (h *HTTPBroker) Handler(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(h.ListGameServer())
 }
 
-func (h *HTTPBroker) AddGameServer(gs *GameServer) error {
+func (h *HTTPBroker) AddGameServer(gs *gameserver) error {
 	defer h.mutex.Unlock()
-
 	h.mutex.Lock()
 
-	h.Store[gs.Name] = gs
+	key := fmt.Sprintf("%s/%s", gs.Namespace, gs.Name)
+	h.Store[key] = gs
 	return nil
 }
 
@@ -117,7 +118,7 @@ func (h *HTTPBroker) DeleteGameServer(key string) {
 	delete(h.Store, key)
 }
 
-func (h *HTTPBroker) ListGameServer() map[string]*GameServer {
+func (h *HTTPBroker) ListGameServer() map[string]*gameserver {
 	defer h.mutex.Unlock()
 
 	h.mutex.Lock()
@@ -127,15 +128,7 @@ func (h *HTTPBroker) ListGameServer() map[string]*GameServer {
 
 func (h *HTTPBroker) handleAdded(gsAgones *v1.GameServer) error {
 	if gsAgones.Status.State == v1.GameServerStateReady {
-		gs := &GameServer{
-			Name:    fmt.Sprintf("%s/%s", gsAgones.Namespace, gsAgones.Name),
-			Labels:  gsAgones.Labels,
-			Address: gsAgones.Status.Address,
-			Port:    gsAgones.Status.Ports[0].Port,
-			State:   string(gsAgones.Status.State),
-		}
-
-		return h.AddGameServer(gs)
+		return h.AddGameServer(GameServer(gsAgones))
 	}
 
 	return nil
@@ -146,15 +139,7 @@ func (h *HTTPBroker) handleUpdated(message interface{}) error {
 	gsAgones := msgUpdate.Field(1).Interface().(*v1.GameServer)
 
 	if gsAgones.Status.State == v1.GameServerStateReady {
-		gs := &GameServer{
-			Name:    fmt.Sprintf("%s/%s", gsAgones.Namespace, gsAgones.Name),
-			Labels:  gsAgones.Labels,
-			Address: gsAgones.Status.Address,
-			Port:    gsAgones.Status.Ports[0].Port,
-			State:   string(gsAgones.Status.State),
-		}
-
-		return h.AddGameServer(gs)
+		return h.AddGameServer(GameServer(gsAgones))
 	}
 
 	return nil
@@ -165,4 +150,15 @@ func (h *HTTPBroker) handleDeleted(gsAgones *v1.GameServer) error {
 	h.DeleteGameServer(key)
 	logrus.Infof("gameserver deleted %s", key)
 	return nil
+}
+
+func GameServer(gs *v1.GameServer) *gameserver {
+	return &gameserver{
+		Name:      gs.Name,
+		Namespace: gs.Namespace,
+		Labels:    gs.Labels,
+		Address:   gs.Status.Address,
+		Port:      gs.Status.Ports[0].Port,
+		State:     string(gs.Status.State),
+	}
 }
