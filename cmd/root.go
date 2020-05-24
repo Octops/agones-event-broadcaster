@@ -17,6 +17,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/Octops/agones-event-broadcaster/pkg/broadcaster"
 	"github.com/Octops/agones-event-broadcaster/pkg/brokers"
 	"github.com/Octops/agones-event-broadcaster/pkg/brokers/pubsub"
@@ -25,7 +27,6 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/api/option"
 	"k8s.io/client-go/tools/clientcmd"
-	"os"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"

@@ -10,7 +10,7 @@ Broadcast Agones GameServer events using a message queueing service (or any othe
 You can find great documentation on https://agones.dev/site/
 
 ## Important
-The project is currently in the Alpha stage and subject to change. Pull requests and issues are more than welcome and appreciated.
+The Agones Event Projects project is currently in the Alpha stage and subject to change. Pull requests and issues are more than welcome and appreciated.
 
 ### Use Cases
 The most common use case is for folks who want to extract information about their Agones GameServers running within Kubernetes.
