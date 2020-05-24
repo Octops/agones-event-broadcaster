@@ -2,6 +2,7 @@ package main
 
 import (
 	v1 "agones.dev/agones/pkg/apis/agones/v1"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/Octops/agones-event-broadcaster/pkg/events"
@@ -9,25 +10,62 @@ import (
 	"net/http"
 	"reflect"
 	"sync"
+	"time"
 )
 
 type GameServer struct {
 	Name    string            `json:"name"`
 	Labels  map[string]string `json:"labels"`
-	Address string            `json:"address"`
+	Address string            `json:"addr"`
 	Port    int32             `json:"port"`
 	State   string            `json:"state"`
 }
 
 type HTTPBroker struct {
 	mutex sync.Mutex
+	addr  string
 	Store map[string]*GameServer
 }
 
 func NewHTTPBroker(addr string) *HTTPBroker {
 	return &HTTPBroker{
+		addr:  addr,
 		Store: map[string]*GameServer{},
 	}
+}
+
+func (h *HTTPBroker) Start(ctx context.Context) {
+	mux := http.NewServeMux()
+	mux.Handle("/", http.HandlerFunc(h.Handler))
+
+	srv := &http.Server{
+		Addr:    h.addr,
+		Handler: mux,
+	}
+
+	go func() {
+		logrus.Infof("server listening at %s", h.addr)
+		if err := srv.ListenAndServe(); err != nil {
+			logrus.Fatal(err)
+		}
+	}()
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				ctxShutDown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+
+				defer func() {
+					cancel()
+				}()
+
+				if err := srv.Shutdown(ctxShutDown); err != nil {
+					logrus.Fatalf("server shutdown failed:%+s", err)
+				}
+			}
+		}
+	}()
 }
 
 func (h *HTTPBroker) BuildEnvelope(event events.Event) (*events.Envelope, error) {

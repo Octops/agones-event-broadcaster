@@ -1,17 +1,20 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"github.com/Octops/agones-event-broadcaster/pkg/broadcaster"
 	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/tools/clientcmd"
-	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 var (
 	masterURL  string
 	kubeconfig string
-	address    string
+	addr       string
 )
 
 func main() {
@@ -26,13 +29,27 @@ func main() {
 		logrus.Fatalf("Error building kubeconfig: %s", err.Error())
 	}
 
-	broker := NewHTTPBroker(address)
+	ctx := context.Background()
 
-	http.HandleFunc("/", broker.Handler)
-	go func() {
-		logrus.Infof("server listening at %s", address)
-		logrus.Fatal(http.ListenAndServe(address, nil))
+	// trap Ctrl+C and call cancel on the context
+	ctx, cancel := context.WithCancel(ctx)
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	defer func() {
+		signal.Stop(c)
+		cancel()
 	}()
+
+	go func() {
+		select {
+		case <-c:
+			cancel()
+		case <-ctx.Done():
+		}
+	}()
+
+	broker := NewHTTPBroker(addr)
+	broker.Start(ctx)
 
 	gsBroadcaster, err := broadcaster.New(cfg, broker)
 	if err != nil {
@@ -50,8 +67,8 @@ func init() {
 	}
 
 	if flag.Lookup("master") == nil {
-		flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
+		flag.StringVar(&masterURL, "master", "", "The addr of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
 	}
 
-	flag.StringVar(&address, "addr", ":8000", "The address of the HTTP server.")
+	flag.StringVar(&addr, "addr", ":8000", "The addr of the HTTP server.")
 }
