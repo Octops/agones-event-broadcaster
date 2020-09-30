@@ -3,7 +3,7 @@ module github.com/Octops/agones-event-broadcaster
 go 1.14
 
 require (
-	agones.dev/agones v1.6.0
+	agones.dev/agones v1.9.0
 	cloud.google.com/go/pubsub v1.0.1
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
