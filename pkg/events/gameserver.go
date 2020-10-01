@@ -55,7 +55,7 @@ func (t *GameServerEvent) EventSource() EventSource {
 	return t.Source
 }
 
-// String is a helper method that returns the string version of a GameServerType
+// String is a helper method that returns the string version of a GameServerEventType
 func (t GameServerEventType) String() string {
 	return string(t)
 }
