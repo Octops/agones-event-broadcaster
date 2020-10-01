@@ -21,12 +21,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"time"
 )
-
-type Options struct {
-	SyncPeriod time.Duration
-}
 
 // GameServerController watches Agones GameServer events
 // and notify the event handlers
@@ -35,11 +30,11 @@ type GameServerController struct {
 	manager.Manager
 }
 
-// reconciler is notified every time an event happens.
+// GameServerReconciler is notified every time an event happens.
 // It can differentiate between events types.
 // The GameServer controller uses the eventHandler for a more grained control.
 // https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.6.0/pkg/reconcile?tab=doc#Reconciler
-type reconciler struct {
+type GameServerReconciler struct {
 	client.Client
 	scheme *runtime.Scheme
 }
@@ -128,7 +123,7 @@ func NewGameServerController(config *rest.Config, eventHandler handlers.EventHan
 				limitingInterface.Forget(request)
 			},
 		}).
-		Complete(&reconciler{
+		Complete(&GameServerReconciler{
 			Client: mgr.GetClient(),
 			scheme: mgr.GetScheme(),
 		})
@@ -157,7 +152,7 @@ func (c *GameServerController) Run(stop <-chan struct{}) error {
 
 // Reconcile is called on every reconcile event. It does not differ between add, update, delete.
 // Its function is purely informative and events are handled back to the broadcaster specific event handlers.
-func (r *reconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) {
+func (r *GameServerReconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
 
 	gameServer := &agonesv1.GameServer{}
