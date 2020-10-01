@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"time"
 )
 
 // Broadcaster receives events (Add, Update and Delete) sent by the controller
@@ -21,7 +22,7 @@ type Broadcaster struct {
 // New returns a new GameServer broadcaster
 // It required a config to be passed to the GameServer controller
 // and a broker that will be publishing messages
-func New(config *rest.Config, broker brokers.Broker) (*Broadcaster, error) {
+func New(config *rest.Config, broker brokers.Broker, syncPeriod time.Duration) (*Broadcaster, error) {
 	logger := log.NewLoggerWithField("source", "broadcaster")
 
 	gsBroadcaster := &Broadcaster{
@@ -29,7 +30,7 @@ func New(config *rest.Config, broker brokers.Broker) (*Broadcaster, error) {
 		Broker: broker,
 	}
 
-	gsController, err := controller.NewGameServerController(config, gsBroadcaster)
+	gsController, err := controller.NewGameServerController(config, gsBroadcaster, controller.Options{SyncPeriod: syncPeriod})
 	if err != nil {
 		return nil, err
 	}

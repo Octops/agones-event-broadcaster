@@ -21,7 +21,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"time"
 )
+
+type Options struct {
+	SyncPeriod time.Duration
+}
 
 // GameServerController watches Agones GameServer events
 // and notify the event handlers
@@ -41,9 +46,11 @@ type reconciler struct {
 
 // NewGameServerController returns a GameServer controller that uses the informed eventHandler
 // to notify the Broadcaster about reconcile events for Agones GameServers
-func NewGameServerController(config *rest.Config, eventHandler handlers.EventHandler) (*GameServerController, error) {
+func NewGameServerController(config *rest.Config, eventHandler handlers.EventHandler, options Options) (*GameServerController, error) {
 	logger := log.NewLoggerWithField("source", "GameServerController")
-	mgr, err := manager.New(config, manager.Options{})
+	mgr, err := manager.New(config, manager.Options{
+		SyncPeriod: &options.SyncPeriod,
+	})
 	if err != nil {
 		return nil, err
 	}

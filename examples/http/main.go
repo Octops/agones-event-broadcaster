@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 var (
@@ -51,7 +52,7 @@ func main() {
 	broker := NewHTTPBroker(addr)
 	broker.Start(ctx)
 
-	gsBroadcaster, err := broadcaster.New(cfg, broker)
+	gsBroadcaster, err := broadcaster.New(cfg, broker, 15*time.Second)
 	if err != nil {
 		logrus.WithError(err).Fatal("error creating broadcaster")
 	}

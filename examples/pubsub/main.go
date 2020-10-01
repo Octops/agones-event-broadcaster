@@ -7,6 +7,7 @@ import (
 	"google.golang.org/api/option"
 	"k8s.io/client-go/tools/clientcmd"
 	"os"
+	"time"
 )
 
 /*
@@ -36,7 +37,7 @@ func main() {
 		logrus.WithError(err).Fatal("error creating broker")
 	}
 
-	gsBroadcaster, err := broadcaster.New(clientConf, broker)
+	gsBroadcaster, err := broadcaster.New(clientConf, broker, 15*time.Second)
 	if err != nil {
 		logrus.WithError(err).Fatal("error creating broadcaster")
 	}
