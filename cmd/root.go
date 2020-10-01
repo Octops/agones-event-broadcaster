@@ -18,6 +18,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/Octops/agones-event-broadcaster/pkg/broadcaster"
 	"github.com/Octops/agones-event-broadcaster/pkg/brokers"
@@ -37,6 +38,7 @@ var (
 	kubeconfig string
 	verbose    bool
 	brokerFlag string
+	syncPeriod string
 )
 
 var rootCmd = &cobra.Command{
@@ -74,7 +76,12 @@ var rootCmd = &cobra.Command{
 			broker = &stdout.StdoutBroker{}
 		}
 
-		gsBroadcaster, err := broadcaster.New(clientConf, broker)
+		duration, err := time.ParseDuration(syncPeriod)
+		if err != nil {
+			logrus.WithError(err).Fatalf("error parsing sync-period flag: %s", syncPeriod)
+		}
+
+		gsBroadcaster, err := broadcaster.New(clientConf, broker, duration)
 		if err != nil {
 			logrus.WithError(err).Fatal("error creating broadcaster")
 		}
@@ -98,6 +105,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.agones-event-broadcaster.yaml)")
 	rootCmd.Flags().StringVar(&kubeconfig, "kubeconfig", "", "Set KUBECONFIG")
 	rootCmd.Flags().StringVar(&brokerFlag, "broker", "", "The type of the broker to be used by the broadcaster")
+	rootCmd.Flags().StringVar(&syncPeriod, "sync-period", "15s", "Determines the minimum frequency at which watched resources are reconciled")
 	rootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Set log level to verbose, defaults to false")
 }
 
