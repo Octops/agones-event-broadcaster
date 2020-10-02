@@ -30,7 +30,8 @@ type AgonesController struct {
 }
 
 type Reconciler struct {
-	obj runtime.Object
+	logger *logrus.Entry
+	obj    runtime.Object
 	client.Client
 	scheme *runtime.Scheme
 }
@@ -38,13 +39,13 @@ type Reconciler struct {
 func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler, options Options) (*AgonesController, error) {
 	optFor := reflect.TypeOf(options.For).Elem().String()
 	logger := logrus.WithFields(logrus.Fields{
-		"source":        "controller",
-		"resource_type": optFor,
+		"source":          "controller",
+		"controller_type": optFor,
 	})
 
 	err := ctrl.NewControllerManagedBy(mgr).
 		For(options.For).
-		Owns(options.Owns).
+		//Owns(options.Owns). //TODO: Assigning Owns duplicates the number of reconcile calls.
 		WithEventFilter(predicate.Funcs{
 			CreateFunc: func(event event.CreateEvent) bool {
 				// Implement some logic here and if returns true if you think that
@@ -72,7 +73,8 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 					},
 				}
 
-				defer limitingInterface.Done(request)
+				//TODO: Investigate if controller require this Done. Keeping doubles the reconcile calls
+				//defer limitingInterface.Done(request)
 
 				if err := eventHandler.OnAdd(createEvent.Object); err != nil {
 					limitingInterface.AddRateLimited(request)
@@ -89,7 +91,8 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 					},
 				}
 
-				defer limitingInterface.Done(request)
+				//TODO: Investigate if controller require this Done. Keeping doubles the reconcile calls
+				//defer limitingInterface.Done(request)
 
 				if err := eventHandler.OnUpdate(updateEvent.ObjectOld, updateEvent.ObjectNew); err != nil {
 					limitingInterface.AddRateLimited(request)
@@ -116,6 +119,7 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 			},
 		}).
 		Complete(&Reconciler{
+			logger: logger,
 			obj:    options.For,
 			Client: mgr.GetClient(),
 			scheme: mgr.GetScheme(),
@@ -142,16 +146,16 @@ func (r *Reconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) 
 	obj := r.obj.DeepCopyObject()
 	if err := r.Get(ctx, req.NamespacedName, obj); err != nil {
 		if apierrors.IsNotFound(err) {
-			logrus.WithField("type", reflect.TypeOf(obj).String()).Debugf("resource \"%s\" not found", req.NamespacedName)
+			r.logger.WithField("type", reflect.TypeOf(obj).String()).Debugf("resource \"%s\" not found", req.NamespacedName)
 			return ctrl.Result{}, nil
 		}
 
-		logrus.WithError(err).Error()
+		r.logger.WithError(err).Error()
 
 		return reconcile.Result{}, err
 	}
 
-	logrus.Debugf("OnReconcile: %s - %s", req.NamespacedName, reflect.TypeOf(obj).String())
+	r.logger.Debugf("OnReconcile: %s (%s)", req.NamespacedName, reflect.TypeOf(obj).String())
 
 	return reconcile.Result{}, nil
 }
