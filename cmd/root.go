@@ -16,17 +16,18 @@ limitations under the License.
 package cmd
 
 import (
+	v1 "agones.dev/agones/pkg/apis/agones/v1"
 	"fmt"
+	"github.com/Octops/agones-event-broadcaster/pkg/brokers/pubsub"
+	"github.com/Octops/agones-event-broadcaster/pkg/brokers/stdout"
+	"google.golang.org/api/option"
 	"os"
 	"time"
 
 	"github.com/Octops/agones-event-broadcaster/pkg/broadcaster"
 	"github.com/Octops/agones-event-broadcaster/pkg/brokers"
-	"github.com/Octops/agones-event-broadcaster/pkg/brokers/pubsub"
-	"github.com/Octops/agones-event-broadcaster/pkg/brokers/stdout"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"google.golang.org/api/option"
 	"k8s.io/client-go/tools/clientcmd"
 
 	homedir "github.com/mitchellh/go-homedir"
@@ -52,44 +53,48 @@ var rootCmd = &cobra.Command{
 
 		clientConf, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 
-		var broker brokers.Broker
-		var opts []option.ClientOption
-
-		if brokerFlag == "pubsub" {
-			// If the broadcaster is running within GCP, credentials don't need to be explicitly passed
-			// Setting this environment variable is optional. The Service Accounts attached to the worker node should be able to perform the operation via IAM settings.
-			if os.Getenv("PUBSUB_CREDENTIALS") != "" {
-				opts = append(opts, option.WithCredentialsFile(os.Getenv("PUBSUB_CREDENTIALS")))
-			}
-
-			broker, err = pubsub.NewPubSubBroker(&pubsub.Config{
-				ProjectID:       os.Getenv("PUBSUB_PROJECT_ID"),
-				OnAddTopicID:    "gameserver.events.added",
-				OnUpdateTopicID: "gameserver.events.updated",
-				OnDeleteTopicID: "gameserver.events.deleted",
-			}, opts...)
-			if err != nil {
-				logrus.WithError(err).Fatal("error creating broker")
-			}
-		} else {
-			// Used only for debugging purpose
-			broker = &stdout.StdoutBroker{}
-		}
+		broker := BuildBroker(brokerFlag)
 
 		duration, err := time.ParseDuration(syncPeriod)
 		if err != nil {
 			logrus.WithError(err).Fatalf("error parsing sync-period flag: %s", syncPeriod)
 		}
 
-		gsBroadcaster, err := broadcaster.New(clientConf, broker, duration)
-		if err != nil {
+		bc := broadcaster.New(clientConf, broker, duration)
+		if err := bc.WithWatcherFor(&v1.Fleet{}).WithWatcherFor(&v1.GameServer{}).Build(); err != nil {
 			logrus.WithError(err).Fatal("error creating broadcaster")
 		}
 
-		if err := gsBroadcaster.Start(); err != nil {
+		if err := bc.Start(); err != nil {
 			logrus.WithError(err).Fatal("error starting broadcaster")
 		}
 	},
+}
+
+func BuildBroker(ofType string) brokers.Broker {
+	if ofType == "pubsub" {
+		var opts []option.ClientOption
+		// If the broadcaster is running within GCP, credentials don't need to be explicitly passed
+		// Setting this environment variable is optional. The Service Accounts attached to the worker node should be able to perform the operation via IAM settings.
+		if os.Getenv("PUBSUB_CREDENTIALS") != "" {
+			opts = append(opts, option.WithCredentialsFile(os.Getenv("PUBSUB_CREDENTIALS")))
+		}
+
+		broker, err := pubsub.NewPubSubBroker(&pubsub.Config{
+			ProjectID:       os.Getenv("PUBSUB_PROJECT_ID"),
+			OnAddTopicID:    "agones.events.added",
+			OnUpdateTopicID: "agones.events.updated",
+			OnDeleteTopicID: "agones.events.deleted",
+		}, opts...)
+		if err != nil {
+			logrus.WithError(err).Fatal("error creating broker")
+		}
+
+		return broker
+	}
+
+	// Used only for debugging purpose
+	return &stdout.StdoutBroker{}
 }
 
 func Execute() {
