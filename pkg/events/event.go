@@ -1,24 +1,41 @@
 package events
 
 import (
+	"k8s.io/apimachinery/pkg/runtime"
 	"reflect"
 )
 
 var (
-	AddedEventsRegistry   = map[string]func(message Message) Event{}
-	UpdatedEventsRegistry = map[string]func(message Message) Event{}
-	DeletedEventsRegistry = map[string]func(message Message) Event{}
+	EventFactoryRegistry = map[string]*EventFactory{}
 )
+
+type EventFactory struct {
+	OnAdded   EventBuilder
+	OnUpdated EventBuilder
+	OnDeleted EventBuilder
+}
+
+type EventBuilder func(message Message) Event
+
+func RegisterEventFactory(obj runtime.Object, onAdded EventBuilder, onUpdated EventBuilder, onDeleted EventBuilder) {
+	kind := reflect.TypeOf(obj).Elem().String()
+	EventFactoryRegistry[kind] = &EventFactory{
+		OnAdded:   onAdded,
+		OnUpdated: onUpdated,
+		OnDeleted: onDeleted,
+	}
+}
 
 func ForAdded(message Message) Event {
 	c := message.Content()
-	kind := reflect.TypeOf(c).Elem().String()
-	fn, ok := AddedEventsRegistry[kind]
+	kind := ResourceMessageKind(c.(runtime.Object))
+
+	fn, ok := EventFactoryRegistry[kind]
 	if !ok {
 		return nil
 	}
 
-	return fn(message)
+	return fn.OnAdded(message)
 }
 
 func ForUpdated(message Message) Event {
@@ -26,22 +43,27 @@ func ForUpdated(message Message) Event {
 	m := reflect.ValueOf(c)
 	obj := m.Field(1).Interface()
 
-	kind := reflect.TypeOf(obj).Elem().String()
-	fn, ok := UpdatedEventsRegistry[kind]
+	kind := ResourceMessageKind(obj.(runtime.Object))
+	fn, ok := EventFactoryRegistry[kind]
 	if !ok {
 		return nil
 	}
 
-	return fn(message)
+	return fn.OnUpdated(message)
 }
 
 func ForDeleted(message Message) Event {
 	c := message.Content()
-	kind := reflect.TypeOf(c).Elem().String()
-	fn, ok := DeletedEventsRegistry[kind]
+	kind := ResourceMessageKind(c.(runtime.Object))
+
+	fn, ok := EventFactoryRegistry[kind]
 	if !ok {
 		return nil
 	}
 
-	return fn(message)
+	return fn.OnDeleted(message)
+}
+
+func ResourceMessageKind(obj runtime.Object) string {
+	return reflect.TypeOf(obj).Elem().String()
 }

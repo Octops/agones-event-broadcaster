@@ -1,5 +1,7 @@
 package events
 
+import v1 "agones.dev/agones/pkg/apis/agones/v1"
+
 var (
 	GameServerEventAdded   GameServerEventType = "gameserver.events.added"
 	GameServerEventUpdated GameServerEventType = "gameserver.events.updated"
@@ -16,8 +18,12 @@ type GameServerEvent struct {
 	Message
 }
 
+func init() {
+	RegisterEventFactory(&v1.GameServer{}, GameServerAdded, GameServerUpdated, GameServerDeleted)
+}
+
 // GameServerAdded is the data structure for reconcile events of type Add
-func GameServerAdded(message Message) *GameServerEvent {
+func GameServerAdded(message Message) Event {
 	return &GameServerEvent{
 		Source:  EventSourceOnAdd,
 		Type:    GameServerEventAdded,
@@ -26,7 +32,7 @@ func GameServerAdded(message Message) *GameServerEvent {
 }
 
 // GameServerUpdates is the data structure for reconcile events of type Update
-func GameServerUpdated(message Message) *GameServerEvent {
+func GameServerUpdated(message Message) Event {
 	return &GameServerEvent{
 		Source:  EventSourceOnUpdate,
 		Type:    GameServerEventUpdated,
@@ -35,7 +41,7 @@ func GameServerUpdated(message Message) *GameServerEvent {
 }
 
 // GameServerDeleted is the data structure for reconcile events of type Delete
-func GameServerDeleted(message Message) *GameServerEvent {
+func GameServerDeleted(message Message) Event {
 	return &GameServerEvent{
 		Source:  EventSourceOnDelete,
 		Type:    GameServerEventDeleted,

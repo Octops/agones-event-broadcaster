@@ -2,7 +2,6 @@ package events
 
 import (
 	v1 "agones.dev/agones/pkg/apis/agones/v1"
-	"reflect"
 )
 
 var (
@@ -20,10 +19,7 @@ type FleetEvent struct {
 }
 
 func init() {
-	kind := reflect.TypeOf(&v1.Fleet{}).Elem().String()
-	AddedEventsRegistry[kind] = FleetAdded
-	UpdatedEventsRegistry[kind] = FleetUpdated
-	DeletedEventsRegistry[kind] = FleetDeleted
+	RegisterEventFactory(&v1.Fleet{}, FleetAdded, FleetUpdated, FleetDeleted)
 }
 
 // FleetAdded is the data structure for reconcile events of type Add
