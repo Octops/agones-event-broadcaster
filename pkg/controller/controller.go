@@ -3,12 +3,10 @@ package controller
 import (
 	"context"
 	"github.com/Octops/agones-event-broadcaster/pkg/events/handlers"
-	"github.com/Octops/agones-event-broadcaster/pkg/runtime/log"
 	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/workqueue"
 	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -19,17 +17,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"time"
 )
 
 type Options struct {
-	SyncPeriod time.Duration
-	For        runtime.Object
-	Owns       runtime.Object
-}
-
-type BroadcasterController interface {
-	Run(stop <-chan struct{}) error
+	For  runtime.Object
+	Owns runtime.Object
 }
 
 type AgonesController struct {
@@ -43,16 +35,14 @@ type Reconciler struct {
 	scheme *runtime.Scheme
 }
 
-func NewAgonesController(config *rest.Config, eventHandler handlers.EventHandler, options Options) (*AgonesController, error) {
-	logger := log.NewLoggerWithField("source", "FleetController")
-	mgr, err := manager.New(config, manager.Options{
-		SyncPeriod: &options.SyncPeriod,
+func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler, options Options) (*AgonesController, error) {
+	optFor := reflect.TypeOf(options.For).Elem().String()
+	logger := logrus.WithFields(logrus.Fields{
+		"source":        "controller",
+		"resource_type": optFor,
 	})
-	if err != nil {
-		return nil, err
-	}
 
-	err = ctrl.NewControllerManagedBy(mgr).
+	err := ctrl.NewControllerManagedBy(mgr).
 		For(options.For).
 		Owns(options.Owns).
 		WithEventFilter(predicate.Funcs{
@@ -140,18 +130,8 @@ func NewAgonesController(config *rest.Config, eventHandler handlers.EventHandler
 		Manager: mgr,
 	}
 
+	logger.Infof("controller created for resource of type %s", optFor)
 	return controller, nil
-}
-
-// Run starts the AgonesController and watches reconcile events for Agones resources
-func (c *AgonesController) Run(stop <-chan struct{}) error {
-	c.logger.Debug("starting controller")
-	if err := c.Start(stop); err != nil {
-		c.logger.WithError(err).Error("error starting controller manager")
-		return err
-	}
-
-	return nil
 }
 
 // Reconcile is called on every reconcile event. It does not differ between add, update, delete.
