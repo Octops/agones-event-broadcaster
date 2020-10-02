@@ -1,5 +1,10 @@
 package events
 
+import (
+	v1 "agones.dev/agones/pkg/apis/agones/v1"
+	"reflect"
+)
+
 var (
 	FleetEventAdded   FleetEventType = "fleet.events.added"
 	FleetEventUpdated FleetEventType = "fleet.events.updated"
@@ -14,8 +19,15 @@ type FleetEvent struct {
 	Message
 }
 
+func init() {
+	kind := reflect.TypeOf(&v1.Fleet{}).Elem().String()
+	AddedEventsRegistry[kind] = FleetAdded
+	UpdatedEventsRegistry[kind] = FleetUpdated
+	DeletedEventsRegistry[kind] = FleetDeleted
+}
+
 // FleetAdded is the data structure for reconcile events of type Add
-func FleetAdded(message Message) *FleetEvent {
+func FleetAdded(message Message) Event {
 	return &FleetEvent{
 		Source:  EventSourceOnAdd,
 		Type:    FleetEventAdded,
@@ -24,7 +36,7 @@ func FleetAdded(message Message) *FleetEvent {
 }
 
 // FleetUpdated is the data structure for reconcile events of type Update
-func FleetUpdated(message Message) *FleetEvent {
+func FleetUpdated(message Message) Event {
 	return &FleetEvent{
 		Source:  EventSourceOnUpdate,
 		Type:    FleetEventUpdated,
@@ -33,7 +45,7 @@ func FleetUpdated(message Message) *FleetEvent {
 }
 
 // FleetDeleted is the data structure for reconcile events of type Delete
-func FleetDeleted(message Message) *FleetEvent {
+func FleetDeleted(message Message) Event {
 	return &FleetEvent{
 		Source:  EventSourceOnDelete,
 		Type:    FleetEventDeleted,
