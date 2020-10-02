@@ -24,11 +24,14 @@ type Options struct {
 	Owns runtime.Object
 }
 
+// AgonesController watches for events associated to a particular resource type like GameServers or Fleets.
+// It uses the passed EventHandler argument to send back the current state of the world.
 type AgonesController struct {
 	logger *logrus.Entry
 	manager.Manager
 }
 
+// Reconciler handles events when resources are reconciled. The interval is configured on the Manager's level.
 type Reconciler struct {
 	logger *logrus.Entry
 	obj    runtime.Object

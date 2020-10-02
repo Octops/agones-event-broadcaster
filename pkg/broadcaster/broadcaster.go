@@ -50,6 +50,9 @@ func New(config *rest.Config, broker brokers.Broker, syncPeriod time.Duration) *
 	return broadcaster
 }
 
+// WithWatcherFor adds a controller for the specified obj. The controller reports back to the broadcaster events of type
+// OnAdd, OnUpdate and OnDelete associated to that particular resource type.
+// Examples of obj arguments are: &v1.GameServer and &v1.Fleet
 func (b *Broadcaster) WithWatcherFor(obj runtime.Object) *Broadcaster {
 	ctrlFor, err := controller.NewAgonesController(b.Manager, b, controller.Options{
 		For:  obj,
@@ -65,6 +68,7 @@ func (b *Broadcaster) WithWatcherFor(obj runtime.Object) *Broadcaster {
 	return b
 }
 
+// Build will check for required broadcaster components e return error if the requirements are not satisfied
 func (b *Broadcaster) Build() error {
 	if b.Manager == nil {
 		b.error = errors.Wrap(b.error, "broadcaster requires a manager to operate")
@@ -103,7 +107,7 @@ func (b *Broadcaster) OnAdd(obj interface{}) error {
 		Body: obj,
 	}
 
-	event := events.ForAdded(message)
+	event := events.OnAdded(message)
 
 	return b.Publish(event)
 }
@@ -127,7 +131,7 @@ func (b *Broadcaster) OnUpdate(oldObj interface{}, newObj interface{}) error {
 		Body: body,
 	}
 
-	event := events.ForUpdated(message)
+	event := events.OnUpdated(message)
 
 	return b.Publish(event)
 }
@@ -143,7 +147,7 @@ func (b *Broadcaster) OnDelete(obj interface{}) error {
 		Body: obj,
 	}
 
-	event := events.ForDeleted(message)
+	event := events.OnDeleted(message)
 
 	return b.Publish(event)
 }

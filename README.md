@@ -2,7 +2,7 @@
 
 # [Alpha] Agones Event Broadcaster
 
-Broadcast Agones GameServer events using a message queueing service (or any other implementation of the Broker).
+Broadcast events associated to Agones resources using a message queueing service (or any other implementation of the Broker).
 
 ### Agones
 > An open source, batteries-included, multiplayer dedicated game server scaling and orchestration platform that can run anywhere Kubernetes can run.
@@ -10,10 +10,10 @@ Broadcast Agones GameServer events using a message queueing service (or any othe
 You can find great documentation on https://agones.dev/site/
 
 ## Important
-The Agones Event Projects project is currently in the Alpha stage and subject to change. Pull requests and issues are more than welcome and appreciated.
+The Agones Event Broadcaster project is currently in the Alpha stage and subject to change. Pull requests and issues are more than welcome and appreciated.
 
 ### Use Cases
-The most common use case is for folks who want to extract information about their Agones GameServers running within Kubernetes.
+The most common use case is for folks who want to extract information about their Agones resources running within Kubernetes.
 Using the broadcaster, you can have one single point of extraction and publish it to different destinations.
 
 Currently, the project supports Google Cloud Pub/Sub. However, this can be extended to any kind of backend.
@@ -39,27 +39,29 @@ Possible, but not limited, ideas for brokers are:
 - ...
 
 ## FAQ
-### What does GameServer event mean?
-For the broadcaster, an event is some sort of information that reflects a GameServer state running within a Kubernetes cluster in a particular moment in time.
+### What does Agones event mean?
+For the broadcaster, an event is some sort of information that reflects the state of an Agones resource deployed on the Kubernetes cluster in a particular moment in time.
+Events can be triggered when a resource has been Added, Updated or Deleted. Currently supported resources are v1.GameServer and v1.Fleet.
 
 ### How/Where events can be emitted?
-The source of events can vary depending on the action which triggered those. For instance, when a GameServer is deployed it might change its state many times.
+The source of events can vary depending on the action which triggered those. For instance, when a GameServer is deployed it might get its state changed many times.
 From the port allocation to the ready state, the information will be added and updated. I.e.: Address and port, status and labels.
+For resources of type Fleet, the source of the event can be a change on the number of replicas.
 
 ### Who is responsible for watching events from the Kubernetes API?
 The broadcaster implements the [Kubernetes Controller Pattern](https://kubernetes.io/docs/concepts/architecture/controller/#controller-pattern). It tracks events for resources of type GameServer.
 
-For every single time the state of a resource of type GameServer has changed, the broadcaster will be notified. Therefore, it will handle the event and publish a message using a Broker.
-Currently, the controller watches GameServers deployed on any namespace. It may change in the future if that becomes a performance issue.
+For every single time the state of a resource of type GameServer or Fleet changes, the broadcaster will be notified. Therefore, it will handle the event and publish a message using a Broker.
+Currently, the controller watches GameServers and Fleets deployed on any namespace. It may change in the future if that becomes a performance issue.
 
 ### What kind of events will be tracked?
 The broadcaster watches for Add, Update and Delete events.
-- Add: When a new GameServer is deployed by Agones
-- Update: When the GameServer state changes by changing any information from its specification.
-- Delete: When the GameServer is deleted from the Kubernetes cluster
+- Add: When a new GameServer or Fleet has been deployed
+- Update: When the state of the resource changes. It could be a change against the Status field or any other fields part of the spec. 
+- Delete: When the resource has been deleted from the Kubernetes cluster
 
 ### What does the event message content look like?
-The current version of the broadcaster sends the entire Agones GameServer state representation as an encoded json. Additionally, some headers containing information about event type (Add, Update or Delete) and custom attributes added by the broker.
+The current version of the broadcaster sends the entire Agones resource state representation as an encoded json. Additionally, some headers containing information about event type (Add, Update or Delete) and custom attributes added by the broker.
 In the future, there may be an event middleware/parser that could extract pieces of information and generate custom messages.
 
 As an example, the Pub/Sub broker builds a header that contains information about the destination topic, the type of the event and the projectID. 
@@ -82,7 +84,7 @@ That information wil be used by the broker when performing the `SendMessage` ope
 }
 ```
 
-Below you can find examples of messages published to different Pub/Sub topics.
+Examples of messages published to different Pub/Sub:
 - OnAdd: [add-gameserver.json](examples/messages/add-gameserver.json)
 - OnUpdate: [update-gameserver.json](examples/messages/update-gameserver.json)
 - OnDelete: [delete-gameserver.json](examples/messages/delete-gameserver.json)
@@ -219,8 +221,8 @@ $ kubectl delete -f install/broadcaster-install.yaml
 The steps below provide the instructions for running the broadcaster on your local laptop. We will be using the `stdout ` broker. That means messages will not be published to any remote service. 
 
 Requirements:
- - Kubernetes Cluster 1.14 (Supported by Agones 1.15)
- - Agones 1.15
+ - Kubernetes Cluster 1.14+
+ - Agones 1.6+ 
  - Kubeconfig
 
 Running
@@ -290,11 +292,17 @@ import broker ..../brokers/kafka
 ...
 
 broker := broker.NewKafkaBroker(&broker.Config{})
-gsBroadcaster, err := broadcaster.New(clientConf, broker)
+gsBroadcaster := broadcaster.New(cfg, broker, 15*time.Second)
+gsBroadcaster.WithWatcherFor(&v1.GameServer{})
+if err := gsBroadcaster.Build(); err != nil {
+    logrus.WithError(err).Fatal("error creating broadcaster")
+}
 
 ...
 
-err := broadCaster.Start()
+if err := gsBroadcaster.Start(); err != nil {
+    logrus.WithError(err).Fatal("error starting broadcaster")
+}
 
 // MongoDB Broker
 import broker ..../brokers/mongodb
@@ -302,11 +310,17 @@ import broker ..../brokers/mongodb
 ...
 
 broker := mongodb.NewMongoDBBroker(&mongodb.Config{})
-gsBroadcaster, err := broadcaster.New(clientConf, broker)
+gsBroadcaster := broadcaster.New(cfg, broker, 15*time.Second)
+gsBroadcaster.WithWatcherFor(&v1.GameServer{})
+if err := gsBroadcaster.Build(); err != nil {
+    logrus.WithError(err).Fatal("error creating broadcaster")
+}
 
 ...
 
- err := broadCaster.Start()
+if err := gsBroadcaster.Start(); err != nil {
+    logrus.WithError(err).Fatal("error starting broadcaster")
+}
 ```
 
 ## Contributions

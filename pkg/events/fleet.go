@@ -12,6 +12,8 @@ var (
 
 type FleetEventType string
 
+// FleetEvent is the data structure for reconcile events associated with Agones Fleets
+// It holds the event source (OnAdd, OnUpdate, OnDelete) and the event type (Added, Updated, Deleted).
 type FleetEvent struct {
 	Source EventSource
 	Type   FleetEventType

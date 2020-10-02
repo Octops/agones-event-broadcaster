@@ -71,6 +71,8 @@ var rootCmd = &cobra.Command{
 	},
 }
 
+// BuildBroker creates a broker based on the broker flag.
+// This will refactored in the future and will be placed on a package
 func BuildBroker(ofType string) brokers.Broker {
 	if ofType == "pubsub" {
 		var opts []option.ClientOption
