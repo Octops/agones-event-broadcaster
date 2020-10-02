@@ -1,6 +1,7 @@
 package main
 
 import (
+	v1 "agones.dev/agones/pkg/apis/agones/v1"
 	"context"
 	"flag"
 	"github.com/Octops/agones-event-broadcaster/pkg/broadcaster"
@@ -52,8 +53,9 @@ func main() {
 	broker := NewHTTPBroker(addr)
 	broker.Start(ctx)
 
-	gsBroadcaster, err := broadcaster.New(cfg, broker, 15*time.Second)
-	if err != nil {
+	gsBroadcaster := broadcaster.New(cfg, broker, 15*time.Second)
+	gsBroadcaster.WithWatcherFor(&v1.GameServer{})
+	if err := gsBroadcaster.Build(); err != nil {
 		logrus.WithError(err).Fatal("error creating broadcaster")
 	}
 

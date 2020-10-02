@@ -1,6 +1,7 @@
 package main
 
 import (
+	v1 "agones.dev/agones/pkg/apis/agones/v1"
 	"github.com/Octops/agones-event-broadcaster/pkg/broadcaster"
 	"github.com/Octops/agones-event-broadcaster/pkg/brokers/pubsub"
 	"github.com/sirupsen/logrus"
@@ -24,7 +25,7 @@ gameserver.events.deleted: destination of OnDelete events
 func main() {
 	logrus.SetLevel(logrus.DebugLevel)
 
-	clientConf, err := clientcmd.BuildConfigFromFlags("", os.Getenv("KUBECONFIG"))
+	cfg, err := clientcmd.BuildConfigFromFlags("", os.Getenv("KUBECONFIG"))
 
 	opts := option.WithCredentialsFile(os.Getenv("PUBSUB_CREDENTIALS"))
 	broker, err := pubsub.NewPubSubBroker(&pubsub.Config{
@@ -37,8 +38,9 @@ func main() {
 		logrus.WithError(err).Fatal("error creating broker")
 	}
 
-	gsBroadcaster, err := broadcaster.New(clientConf, broker, 15*time.Second)
-	if err != nil {
+	gsBroadcaster := broadcaster.New(cfg, broker, 15*time.Second)
+	gsBroadcaster.WithWatcherFor(&v1.GameServer{})
+	if err := gsBroadcaster.Build(); err != nil {
 		logrus.WithError(err).Fatal("error creating broadcaster")
 	}
 

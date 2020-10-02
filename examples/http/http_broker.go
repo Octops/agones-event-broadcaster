@@ -52,6 +52,7 @@ func (h *HTTPBroker) Start(ctx context.Context) {
 
 	go func() {
 		logrus.Infof("server listening at %s", h.addr)
+		logrus.Infof("http://localhost%s/api/gameservers", h.addr)
 		if err := srv.ListenAndServe(); err != nil {
 			logrus.Fatal(err)
 		}
