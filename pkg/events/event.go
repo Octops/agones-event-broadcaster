@@ -17,6 +17,7 @@ type EventFactory struct {
 
 type EventBuilder func(message Message) Event
 
+// RegisterEventFactory register events builders for a particular resource type.
 func RegisterEventFactory(obj runtime.Object, onAdded EventBuilder, onUpdated EventBuilder, onDeleted EventBuilder) {
 	kind := reflect.TypeOf(obj).Elem().String()
 	EventFactoryRegistry[kind] = &EventFactory{
@@ -26,7 +27,8 @@ func RegisterEventFactory(obj runtime.Object, onAdded EventBuilder, onUpdated Ev
 	}
 }
 
-func ForAdded(message Message) Event {
+// OnAdded builds an event of type OnAdded for a particular message content type
+func OnAdded(message Message) Event {
 	c := message.Content()
 	kind := ResourceMessageKind(c.(runtime.Object))
 
@@ -38,7 +40,8 @@ func ForAdded(message Message) Event {
 	return fn.OnAdded(message)
 }
 
-func ForUpdated(message Message) Event {
+// OnUpdated builds an event of type OnUpdated for a particular message content type
+func OnUpdated(message Message) Event {
 	c := message.Content()
 	m := reflect.ValueOf(c)
 	obj := m.Field(1).Interface()
@@ -52,7 +55,8 @@ func ForUpdated(message Message) Event {
 	return fn.OnUpdated(message)
 }
 
-func ForDeleted(message Message) Event {
+// OnDeleted builds an event of type OnDeleted for a particular message content type
+func OnDeleted(message Message) Event {
 	c := message.Content()
 	kind := ResourceMessageKind(c.(runtime.Object))
 
@@ -64,6 +68,7 @@ func ForDeleted(message Message) Event {
 	return fn.OnDeleted(message)
 }
 
+// ResourceMessageKind returns the type of the object that is the content of the message
 func ResourceMessageKind(obj runtime.Object) string {
 	return reflect.TypeOf(obj).Elem().String()
 }
