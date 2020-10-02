@@ -34,7 +34,7 @@ TESTS    := $(shell find internal cmd -name '*.go' -type f -not -name '*.pb.go' 
 
 BROADCASTER_BIN := bin/broadcaster
 
-DOCKER_IMAGE_TAG ?= octops/agones-event-broadcaster:v0.1.6-alpha
+DOCKER_IMAGE_TAG ?= octops/agones-event-broadcaster:${VERSION}
 
 default: clean build
 

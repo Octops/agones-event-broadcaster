@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: agones-events-controller
+  labels:
+    app: agones-event-broadcaster
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: agones-events-controller
+  labels:
+    app: agones-event-broadcaster
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["list", "watch"]
+  - apiGroups: ["agones.dev"]
+    resources: ["gameservers","fleets"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: agones-events-controller
+  labels:
+    app: agones-event-broadcaster
+subjects:
+  - kind: User
+    name: system:serviceaccount:default:agones-events-controller
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: agones-events-controller
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agones-events-controller
+  labels:
+    component: controller
+    app: agones-event-broadcaster
+spec:
+  selector:
+    matchLabels:
+      app: agones-event-broadcaster
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: agones-event-broadcaster
+    spec:
+      serviceAccountName: agones-events-controller
+      containers:
+        - name: agones-events-controller
+          image: "octops/agones-event-broadcaster:${TAG}"
+          args:
+            - --verbose
+          imagePullPolicy: IfNotPresent
