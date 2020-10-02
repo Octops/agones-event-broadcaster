@@ -1,22 +1,27 @@
 package broadcaster
 
 import (
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"github.com/Octops/agones-event-broadcaster/pkg/brokers"
 	"github.com/Octops/agones-event-broadcaster/pkg/controller"
 	"github.com/Octops/agones-event-broadcaster/pkg/events"
 	"github.com/Octops/agones-event-broadcaster/pkg/runtime/log"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"time"
 )
 
 // Broadcaster receives events (Add, Update and Delete) sent by the controller
 // and uses a Broker to publish those events.
 type Broadcaster struct {
-	logger     *logrus.Entry
-	controller *controller.GameServerController
+	logger      *logrus.Entry
+	controllers []*controller.AgonesController
 	brokers.Broker
+	manager.Manager
 }
 
 // New returns a new GameServer broadcaster
@@ -25,26 +30,59 @@ type Broadcaster struct {
 func New(config *rest.Config, broker brokers.Broker, syncPeriod time.Duration) (*Broadcaster, error) {
 	logger := log.NewLoggerWithField("source", "broadcaster")
 
-	gsBroadcaster := &Broadcaster{
+	broadcaster := &Broadcaster{
 		logger: logger,
 		Broker: broker,
 	}
 
-	gsController, err := controller.NewGameServerController(config, gsBroadcaster, controller.Options{SyncPeriod: syncPeriod})
+	/*
+		Stopped Here
+		create controllers based on flags
+		boot message
+		controller logger fields
+	*/
+	mgr, err := manager.New(config, manager.Options{
+		SyncPeriod: &syncPeriod,
+	})
+
 	if err != nil {
 		return nil, err
 	}
 
-	gsBroadcaster.controller = gsController
+	broadcaster.Manager = mgr
 
-	return gsBroadcaster, nil
+	bcCtrl, err := controller.NewAgonesController(mgr, broadcaster, controller.Options{
+		For:  &agonesv1.GameServer{},
+		Owns: &corev1.Pod{},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	broadcaster.AddController(bcCtrl)
+
+	fleet, err := controller.NewAgonesController(mgr, broadcaster, controller.Options{
+		For:  &agonesv1.Fleet{},
+		Owns: &corev1.Pod{},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	broadcaster.AddController(fleet)
+
+	return broadcaster, nil
+}
+
+func (b *Broadcaster) AddController(controller *controller.AgonesController) {
+	b.controllers = append(b.controllers, controller)
 }
 
 // Start run the controller that sends events back to the broadcaster event handlers
 func (b *Broadcaster) Start() error {
-	if err := b.controller.Run(ctrl.SetupSignalHandler()); err != nil {
-		b.logger.WithError(err).Error("broadcaster could not start")
-		return err
+	chDone := ctrl.SetupSignalHandler()
+	if err := b.Manager.Start(chDone); err != nil {
+		b.logger.Fatal(errors.Wrap(err, "broadcaster could not start"))
 	}
 
 	return nil
@@ -61,7 +99,7 @@ func (b *Broadcaster) OnAdd(obj interface{}) error {
 		Body: obj,
 	}
 
-	event := events.GameServerAdded(message)
+	event := events.ForAdded(message)
 
 	return b.Publish(event)
 }
@@ -85,7 +123,7 @@ func (b *Broadcaster) OnUpdate(oldObj interface{}, newObj interface{}) error {
 		Body: body,
 	}
 
-	event := events.GameServerUpdated(message)
+	event := events.ForUpdated(message)
 
 	return b.Publish(event)
 }
@@ -101,7 +139,7 @@ func (b *Broadcaster) OnDelete(obj interface{}) error {
 		Body: obj,
 	}
 
-	event := events.GameServerDeleted(message)
+	event := events.ForDeleted(message)
 
 	return b.Publish(event)
 }

@@ -1,18 +1,14 @@
 package controller
 
 import (
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"context"
-	"fmt"
 	"github.com/Octops/agones-event-broadcaster/pkg/events/handlers"
-	"github.com/Octops/agones-event-broadcaster/pkg/runtime/log"
 	"github.com/sirupsen/logrus"
-	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/workqueue"
+	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -21,43 +17,34 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"time"
 )
 
 type Options struct {
-	SyncPeriod time.Duration
+	For  runtime.Object
+	Owns runtime.Object
 }
 
-// GameServerController watches Agones GameServer events
-// and notify the event handlers
-type GameServerController struct {
+type AgonesController struct {
 	logger *logrus.Entry
 	manager.Manager
 }
 
-// reconciler is notified every time an event happens.
-// It can differentiate between events types.
-// The GameServer controller uses the eventHandler for a more grained control.
-// https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.6.0/pkg/reconcile?tab=doc#Reconciler
-type reconciler struct {
+type Reconciler struct {
+	obj runtime.Object
 	client.Client
 	scheme *runtime.Scheme
 }
 
-// NewGameServerController returns a GameServer controller that uses the informed eventHandler
-// to notify the Broadcaster about reconcile events for Agones GameServers
-func NewGameServerController(config *rest.Config, eventHandler handlers.EventHandler, options Options) (*GameServerController, error) {
-	logger := log.NewLoggerWithField("source", "GameServerController")
-	mgr, err := manager.New(config, manager.Options{
-		SyncPeriod: &options.SyncPeriod,
+func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler, options Options) (*AgonesController, error) {
+	optFor := reflect.TypeOf(options.For).Elem().String()
+	logger := logrus.WithFields(logrus.Fields{
+		"source":        "controller",
+		"resource_type": optFor,
 	})
-	if err != nil {
-		return nil, err
-	}
 
-	err = ctrl.NewControllerManagedBy(mgr).
-		For(&agonesv1.GameServer{}).
-		Owns(&corev1.Pod{}).
+	err := ctrl.NewControllerManagedBy(mgr).
+		For(options.For).
+		Owns(options.Owns).
 		WithEventFilter(predicate.Funcs{
 			CreateFunc: func(event event.CreateEvent) bool {
 				// Implement some logic here and if returns true if you think that
@@ -74,7 +61,7 @@ func NewGameServerController(config *rest.Config, eventHandler handlers.EventHan
 				return true
 			},
 		}).
-		Watches(&source.Kind{Type: &agonesv1.GameServer{}}, &handler.Funcs{
+		Watches(&source.Kind{Type: options.For}, &handler.Funcs{
 			CreateFunc: func(createEvent event.CreateEvent, limitingInterface workqueue.RateLimitingInterface) {
 				// OnAdd is triggered only when the controller is syncing its cache.
 				// It does not map ot the resource creation event triggered by Kubernetes
@@ -128,7 +115,8 @@ func NewGameServerController(config *rest.Config, eventHandler handlers.EventHan
 				limitingInterface.Forget(request)
 			},
 		}).
-		Complete(&reconciler{
+		Complete(&Reconciler{
+			obj:    options.For,
 			Client: mgr.GetClient(),
 			scheme: mgr.GetScheme(),
 		})
@@ -137,33 +125,24 @@ func NewGameServerController(config *rest.Config, eventHandler handlers.EventHan
 		return nil, err
 	}
 
-	controller := &GameServerController{
+	controller := &AgonesController{
 		logger:  logger,
 		Manager: mgr,
 	}
 
+	logger.Infof("controller created for resource of type %s", optFor)
 	return controller, nil
-}
-
-// Run starts the GameServerController and watches reconcile events for Agones GameServers
-func (c *GameServerController) Run(stop <-chan struct{}) error {
-	if err := c.Start(stop); err != nil {
-		c.logger.WithError(err).Error("error starting controller manager")
-		return err
-	}
-
-	return nil
 }
 
 // Reconcile is called on every reconcile event. It does not differ between add, update, delete.
 // Its function is purely informative and events are handled back to the broadcaster specific event handlers.
-func (r *reconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) {
+func (r *Reconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
 
-	gameServer := &agonesv1.GameServer{}
-	if err := r.Get(ctx, req.NamespacedName, gameServer); err != nil {
+	obj := r.obj.DeepCopyObject()
+	if err := r.Get(ctx, req.NamespacedName, obj); err != nil {
 		if apierrors.IsNotFound(err) {
-			logrus.Debugf("GameServer.agones.dev \"%s\" not found", req.NamespacedName)
+			logrus.WithField("type", reflect.TypeOf(obj).String()).Debugf("resource \"%s\" not found", req.NamespacedName)
 			return ctrl.Result{}, nil
 		}
 
@@ -172,8 +151,7 @@ func (r *reconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) 
 		return reconcile.Result{}, err
 	}
 
-	msg := fmt.Sprintf("OnReconcile: %s - %s", req.NamespacedName, gameServer.Status.State)
-	logrus.Debug(msg)
+	logrus.Debugf("OnReconcile: %s - %s", req.NamespacedName, reflect.TypeOf(obj).String())
 
 	return reconcile.Result{}, nil
 }

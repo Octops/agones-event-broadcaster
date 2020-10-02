@@ -16,7 +16,7 @@ func Test_PubSubBroker_BuildEnvelope_GameServerEvent(t *testing.T) {
 	testCases := []struct {
 		desc    string
 		topicID string
-		event   func(message events.Message) *events.GameServerEvent
+		event   func(message events.Message) events.Event
 		message events.Message
 		expect  *events.Envelope
 	}{
