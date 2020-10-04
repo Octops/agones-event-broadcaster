@@ -24,3 +24,8 @@ type Message interface {
 func (t EventType) String() string {
 	return string(t)
 }
+
+// String returns the string representation of a EventType
+func (s EventSource) String() string {
+	return string(s)
+}
