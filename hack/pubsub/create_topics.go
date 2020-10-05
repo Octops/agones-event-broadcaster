@@ -25,9 +25,12 @@ import (
 
 var (
 	topics = map[string]string{
-		"OnAdd":    "gameserver.events.added",
-		"OnUpdate": "gameserver.events.updated",
-		"OnDelete": "gameserver.events.deleted",
+		"OnAddGameServer":    "gameserver.events.added",
+		"OnUpdateGameServer": "gameserver.events.updated",
+		"OnDeleteGameServer": "gameserver.events.deleted",
+		"OnAddFleet":         "fleet.events.added",
+		"OnUpdateFleet":      "fleet.events.updated",
+		"OnDeleteFleet":      "fleet.events.deleted",
 	}
 )
 
