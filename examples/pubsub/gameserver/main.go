@@ -24,6 +24,7 @@ gameserver.events.deleted: destination of OnDelete events
 */
 func main() {
 	logrus.SetLevel(logrus.DebugLevel)
+	logrus.Info("starting application")
 
 	cfg, err := clientcmd.BuildConfigFromFlags("", os.Getenv("KUBECONFIG"))
 
