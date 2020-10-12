@@ -16,7 +16,7 @@ rules:
     resources: ["pods"]
     verbs: ["list", "watch"]
   - apiGroups: ["agones.dev"]
-    resources: ["gameservers",]
+    resources: ["gameservers","fleets"]
     verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
