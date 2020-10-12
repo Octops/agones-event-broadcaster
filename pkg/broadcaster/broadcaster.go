@@ -120,8 +120,8 @@ func (b *Broadcaster) OnUpdate(oldObj interface{}, newObj interface{}) error {
 	}
 
 	body := struct {
-		OldObj interface{}
-		NewObj interface{}
+		OldObj interface{} `json:"old_obj"`
+		NewObj interface{} `json:"new_obj"`
 	}{
 		OldObj: oldObj,
 		NewObj: newObj,

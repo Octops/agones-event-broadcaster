@@ -2,7 +2,7 @@ package events
 
 // EventMessage is the data structure for messages that are resulting of reconcile events.
 type EventMessage struct {
-	Body interface{}
+	Body interface{} `json:"body"`
 }
 
 // Content extracts the body of the EventMessage
