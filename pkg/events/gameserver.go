@@ -13,9 +13,9 @@ type GameServerEventType string
 // GameServerEvent is the data structure for reconcile events associated with Agones GameServers
 // It holds the event source (OnAdd, OnUpdate, OnDelete) and the event type (Added, Updated, Deleted).
 type GameServerEvent struct {
-	Source EventSource
-	Type   GameServerEventType
-	Message
+	Source  EventSource         `json:"source"`
+	Type    GameServerEventType `json:"type"`
+	Message `json:"message"`
 }
 
 func init() {
