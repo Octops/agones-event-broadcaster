@@ -2,7 +2,14 @@
 
 # [Alpha] Agones Event Broadcaster
 
-Broadcast events associated to Agones resources using a message queueing service (or any other implementation of the Broker).
+Broadcast Agones GameServers or Fleets states using a message queueing service (or any other implementation of the Broker). The broadcaster will watch for changes happening to both types of resources and will publish those changes using the provided Broker.
+
+Possible scenarios:
+- Tracking of how many players have joined a particular GameServer
+- Find out what is the current state of a Fleet in terms of Ready and Allocated replicas
+- Notify a third-party service when a GameServer starts
+- Create external cloud resources such as DNS records, firewall rules or proxy directives when a GameServer is Ready
+- Publish information extracted from GameServers or Fleets to Kafka topics to be processed by a data analytics pipeline
 
 ### Agones
 > An open source, batteries-included, multiplayer dedicated game server scaling and orchestration platform that can run anywhere Kubernetes can run.
