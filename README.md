@@ -7,7 +7,7 @@ Broadcast Agones GameServers or Fleets states using a message queueing service (
 Possible scenarios:
 - Tracking of how many players have joined a particular GameServer
 - Find out what is the current state of a Fleet in terms of Ready and Allocated replicas
-- Notify a third-party service when a GameServer starts
+- Notify a third-party service when a GameServer starts or when a fleet runs out of capacity
 - Create external cloud resources such as DNS records, firewall rules or proxy directives when a GameServer is Ready
 - Publish information extracted from GameServers or Fleets to Kafka topics to be processed by a data analytics pipeline
 
