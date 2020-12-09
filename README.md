@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.com/Octops/agones-event-broadcaster.svg?branch=master)](https://travis-ci.com/Octops/agones-event-broadcaster)
 
-# [Alpha] Agones Event Broadcaster
+# [Beta] Agones Event Broadcaster
 
 Broadcast Agones GameServers or Fleets states using a message queueing service (or any other implementation of the Broker). The broadcaster will watch for changes happening to both types of resources and will publish those changes using the provided Broker.
 
