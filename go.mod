@@ -3,7 +3,7 @@ module github.com/Octops/agones-event-broadcaster
 go 1.14
 
 require (
-	agones.dev/agones v1.9.0
+	agones.dev/agones v1.11.0
 	cloud.google.com/go/pubsub v1.0.1
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
@@ -13,8 +13,8 @@ require (
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.5.0
 	google.golang.org/api v0.13.0
-	k8s.io/api v0.17.2
-	k8s.io/apimachinery v0.17.2
-	k8s.io/client-go v0.17.2
+	k8s.io/api v0.17.14
+	k8s.io/apimachinery v0.17.14
+	k8s.io/client-go v0.17.14
 	sigs.k8s.io/controller-runtime v0.5.4
 )
