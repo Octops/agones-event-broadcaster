@@ -40,6 +40,7 @@ var (
 	verbose    bool
 	brokerFlag string
 	syncPeriod string
+	port       int
 )
 
 var rootCmd = &cobra.Command{
@@ -60,7 +61,7 @@ var rootCmd = &cobra.Command{
 			logrus.WithError(err).Fatalf("error parsing sync-period flag: %s", syncPeriod)
 		}
 
-		bc := broadcaster.New(clientConf, broker, duration)
+		bc := broadcaster.New(clientConf, broker, duration, port)
 		if err := bc.WithWatcherFor(&v1.Fleet{}).WithWatcherFor(&v1.GameServer{}).Build(); err != nil {
 			logrus.WithError(err).Fatal("error creating broadcaster")
 		}
@@ -114,6 +115,7 @@ func init() {
 	rootCmd.Flags().StringVar(&brokerFlag, "broker", "", "The type of the broker to be used by the broadcaster")
 	rootCmd.Flags().StringVar(&syncPeriod, "sync-period", "15s", "Determines the minimum frequency at which watched resources are reconciled")
 	rootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Set log level to verbose, defaults to false")
+	rootCmd.Flags().IntVarP(&port, "port", "p", 8089, "Port used by the broadcaster to communicate via http")
 }
 
 // initConfig reads in config file and ENV variables if set.

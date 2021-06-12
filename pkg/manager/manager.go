@@ -9,6 +9,7 @@ import (
 
 type Options struct {
 	SyncPeriod *time.Duration
+	Port       int
 }
 
 type Manager struct {
@@ -18,7 +19,9 @@ type Manager struct {
 func New(config *rest.Config, options Options) (*Manager, error) {
 	mgr, err := manager.New(config, manager.Options{
 		SyncPeriod: options.SyncPeriod,
+		Port:       options.Port,
 	})
+
 	if err != nil {
 		return nil, errors.Wrap(err, "manager could not be created")
 	}
