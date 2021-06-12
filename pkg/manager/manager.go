@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"context"
 	"github.com/pkg/errors"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -27,4 +28,8 @@ func New(config *rest.Config, options Options) (*Manager, error) {
 	}
 
 	return &Manager{mgr}, nil
+}
+
+func (m *Manager) Start(ctx context.Context) error {
+	return m.Manager.Start(ctx)
 }

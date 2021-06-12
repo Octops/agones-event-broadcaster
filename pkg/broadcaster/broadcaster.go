@@ -9,9 +9,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
 )
 
@@ -54,7 +54,7 @@ func New(config *rest.Config, broker brokers.Broker, syncPeriod time.Duration, p
 // WithWatcherFor adds a controller for the specified obj. The controller reports back to the broadcaster events of type
 // OnAdd, OnUpdate and OnDelete associated to that particular resource type.
 // Examples of obj arguments are: &v1.GameServer and &v1.Fleet
-func (b *Broadcaster) WithWatcherFor(obj runtime.Object) *Broadcaster {
+func (b *Broadcaster) WithWatcherFor(obj client.Object) *Broadcaster {
 	ctrlFor, err := controller.NewAgonesController(b.Manager, b, controller.Options{
 		For:  obj,
 		Owns: &corev1.Pod{},
@@ -89,8 +89,8 @@ func (b *Broadcaster) Build() error {
 // Start run the controller that sends events back to the broadcaster event handlers
 func (b *Broadcaster) Start() error {
 	b.logger.Info("starting broadcaster")
-	chDone := ctrl.SetupSignalHandler()
-	if err := b.Manager.Start(chDone); err != nil {
+	ctx := ctrl.SetupSignalHandler()
+	if err := b.Manager.Start(ctx); err != nil {
 		b.logger.Fatal(errors.Wrap(err, "broadcaster could not start"))
 	}
 

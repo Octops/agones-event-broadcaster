@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"github.com/Octops/agones-event-broadcaster/pkg/events/handlers"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -18,8 +19,8 @@ import (
 )
 
 type Options struct {
-	For  runtime.Object
-	Owns runtime.Object
+	For  client.Object
+	Owns client.Object
 }
 
 // AgonesController watches for events associated to a particular resource type like GameServers or Fleets.
@@ -69,8 +70,8 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 				// It does not map ot the resource creation event triggered by Kubernetes
 				request := reconcile.Request{
 					NamespacedName: types.NamespacedName{
-						Namespace: createEvent.Meta.GetNamespace(),
-						Name:      createEvent.Meta.GetName(),
+						Namespace: createEvent.Object.GetNamespace(),
+						Name:      createEvent.Object.GetName(),
 					},
 				}
 
@@ -87,8 +88,8 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 			UpdateFunc: func(updateEvent event.UpdateEvent, limitingInterface workqueue.RateLimitingInterface) {
 				request := reconcile.Request{
 					NamespacedName: types.NamespacedName{
-						Namespace: updateEvent.MetaNew.GetNamespace(),
-						Name:      updateEvent.MetaNew.GetName(),
+						Namespace: updateEvent.ObjectNew.GetNamespace(),
+						Name:      updateEvent.ObjectNew.GetName(),
 					},
 				}
 
@@ -106,8 +107,8 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 
 				request := reconcile.Request{
 					NamespacedName: types.NamespacedName{
-						Namespace: deleteEvent.Meta.GetNamespace(),
-						Name:      deleteEvent.Meta.GetName(),
+						Namespace: deleteEvent.Object.GetNamespace(),
+						Name:      deleteEvent.Object.GetName(),
 					},
 				}
 
@@ -147,7 +148,7 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 // where control over very specific events matter. Right now it is just a STDOUT output.
 // Reconcile is called on every reconcile event. It does not differ between add, update, delete.
 // Its function is purely informative and events are handled back to the broadcaster specific event handlers.
-func (r *Reconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) {
+func (r *Reconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 	//ctx := context.Background()
 	//obj := r.obj.DeepCopyObject()
 	//if err := r.Get(ctx, req.NamespacedName, obj); err != nil {
