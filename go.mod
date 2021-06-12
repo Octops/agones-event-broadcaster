@@ -1,6 +1,6 @@
 module github.com/Octops/agones-event-broadcaster
 
-go 1.14
+go 1.16
 
 require (
 	agones.dev/agones v1.11.0
