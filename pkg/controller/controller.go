@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"github.com/Octops/agones-event-broadcaster/pkg/events/handlers"
+	"github.com/Octops/agones-event-broadcaster/pkg/runtime/log"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -40,7 +41,7 @@ type Reconciler struct {
 
 func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler, options Options) (*AgonesController, error) {
 	optFor := reflect.TypeOf(options.For).Elem().String()
-	logger := logrus.WithFields(logrus.Fields{
+	logger := log.Logger().WithFields(logrus.Fields{
 		"source":          "controller",
 		"controller_type": optFor,
 	})

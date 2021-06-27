@@ -4,6 +4,7 @@ import (
 	v1 "agones.dev/agones/pkg/apis/agones/v1"
 	"github.com/Octops/agones-event-broadcaster/pkg/broadcaster"
 	"github.com/Octops/agones-event-broadcaster/pkg/brokers/pubsub"
+	"github.com/Octops/agones-event-broadcaster/pkg/runtime/log"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/api/option"
 	"k8s.io/client-go/tools/clientcmd"
@@ -24,7 +25,7 @@ fleet.events.deleted: destination of OnDelete events
 */
 func main() {
 	logrus.SetLevel(logrus.DebugLevel)
-	logrus.Info("starting application")
+	log.Logger().Info("starting application")
 
 	cfg, err := clientcmd.BuildConfigFromFlags("", os.Getenv("KUBECONFIG"))
 
@@ -39,7 +40,7 @@ func main() {
 		logrus.WithError(err).Fatal("error creating broker")
 	}
 
-	gsBroadcaster := broadcaster.New(cfg, broker, 15*time.Second)
+	gsBroadcaster := broadcaster.New(cfg, broker, 15*time.Second, 8088)
 	gsBroadcaster.WithWatcherFor(&v1.Fleet{})
 	if err := gsBroadcaster.Build(); err != nil {
 		logrus.WithError(err).Fatal("error creating broadcaster")
