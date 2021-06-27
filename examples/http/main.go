@@ -53,7 +53,7 @@ func main() {
 	broker := NewHTTPBroker(addr)
 	broker.Start(ctx)
 
-	gsBroadcaster := broadcaster.New(cfg, broker, 15*time.Second)
+	gsBroadcaster := broadcaster.New(cfg, broker, 15*time.Second, 8090)
 	gsBroadcaster.WithWatcherFor(&v1.GameServer{})
 	if err := gsBroadcaster.Build(); err != nil {
 		logrus.WithError(err).Fatal("error creating broadcaster")
