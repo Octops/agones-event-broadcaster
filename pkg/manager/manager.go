@@ -9,8 +9,9 @@ import (
 )
 
 type Options struct {
-	SyncPeriod *time.Duration
-	Port       int
+	SyncPeriod         *time.Duration
+	ServerPort         int
+	MetricsBindAddress string
 }
 
 type Manager struct {
@@ -19,8 +20,9 @@ type Manager struct {
 
 func New(config *rest.Config, options Options) (*Manager, error) {
 	mgr, err := manager.New(config, manager.Options{
-		SyncPeriod: options.SyncPeriod,
-		Port:       options.Port,
+		SyncPeriod:         options.SyncPeriod,
+		Port:               options.ServerPort,
+		MetricsBindAddress: options.MetricsBindAddress,
 	})
 
 	if err != nil {
