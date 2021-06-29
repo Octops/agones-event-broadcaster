@@ -35,12 +35,13 @@ import (
 )
 
 var (
-	cfgFile    string
-	kubeconfig string
-	verbose    bool
-	brokerFlag string
-	syncPeriod string
-	port       int
+	cfgFile            string
+	kubeconfig         string
+	verbose            bool
+	brokerFlag         string
+	syncPeriod         string
+	port               int
+	metricsBindAddress string
 )
 
 var rootCmd = &cobra.Command{
@@ -61,7 +62,7 @@ var rootCmd = &cobra.Command{
 			logrus.WithError(err).Fatalf("error parsing sync-period flag: %s", syncPeriod)
 		}
 
-		bc := broadcaster.New(clientConf, broker, duration, port)
+		bc := broadcaster.New(clientConf, broker, duration, port, metricsBindAddress)
 		if err := bc.WithWatcherFor(&v1.Fleet{}).WithWatcherFor(&v1.GameServer{}).Build(); err != nil {
 			logrus.WithError(err).Fatal("error creating broadcaster")
 		}
@@ -116,6 +117,7 @@ func init() {
 	rootCmd.Flags().StringVar(&syncPeriod, "sync-period", "15s", "Determines the minimum frequency at which watched resources are reconciled")
 	rootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Set log level to verbose, defaults to false")
 	rootCmd.Flags().IntVarP(&port, "port", "p", 8089, "Port used by the broadcaster to communicate via http")
+	rootCmd.Flags().StringVar(&metricsBindAddress, "metrics-bind-address", "0.0.0.0:8095", "The TCP address that the controller should bind to for serving prometheus metrics")
 }
 
 // initConfig reads in config file and ENV variables if set.

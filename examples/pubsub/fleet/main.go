@@ -40,7 +40,7 @@ func main() {
 		logrus.WithError(err).Fatal("error creating broker")
 	}
 
-	gsBroadcaster := broadcaster.New(cfg, broker, 15*time.Second, 8088)
+	gsBroadcaster := broadcaster.New(cfg, broker, 15*time.Second, 8088, "0.0.0.0:8095")
 	gsBroadcaster.WithWatcherFor(&v1.Fleet{})
 	if err := gsBroadcaster.Build(); err != nil {
 		logrus.WithError(err).Fatal("error creating broadcaster")
