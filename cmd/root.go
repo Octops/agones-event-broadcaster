@@ -21,6 +21,7 @@ import (
 	"time"
 
 	v1 "agones.dev/agones/pkg/apis/agones/v1"
+	"github.com/Octops/agones-event-broadcaster/pkg/brokers/kafka"
 	"github.com/Octops/agones-event-broadcaster/pkg/brokers/pubsub"
 	"github.com/Octops/agones-event-broadcaster/pkg/brokers/stdout"
 	"google.golang.org/api/option"
@@ -53,7 +54,6 @@ var rootCmd = &cobra.Command{
 		if verbose {
 			logrus.SetLevel(logrus.DebugLevel)
 		}
-
 		clientConf, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 		if err != nil {
 			logrus.WithError(err).Fatalf("error reading kubeconfig: %s", kubeconfig)
@@ -67,6 +67,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		bc := broadcaster.New(clientConf, broker, duration, port, metricsBindAddress)
+
 		if err := bc.WithWatcherFor(&v1.Fleet{}).WithWatcherFor(&v1.GameServer{}).Build(); err != nil {
 			logrus.WithError(err).Fatal("error creating broadcaster")
 		}
@@ -98,6 +99,16 @@ func BuildBroker(ofType string) brokers.Broker {
 			logrus.WithError(err).Fatal("error creating broker")
 		}
 
+		return broker
+	} else if ofType == "kafka" {
+		broker, err := kafka.NewKafkaBroker(&kafka.Config{
+			APIKey:           os.Getenv("KAFKA_APIKEY"),
+			APISecret:        os.Getenv("KAFKA_APISECRET"),
+			BootstrapServers: os.Getenv("KAFKA_SERVERS"),
+		})
+		if err != nil {
+			logrus.WithError(err).Fatal("error creating kafka broker")
+		}
 		return broker
 	}
 
