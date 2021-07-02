@@ -16,13 +16,14 @@ limitations under the License.
 package cmd
 
 import (
-	v1 "agones.dev/agones/pkg/apis/agones/v1"
 	"fmt"
+	"os"
+	"time"
+
+	v1 "agones.dev/agones/pkg/apis/agones/v1"
 	"github.com/Octops/agones-event-broadcaster/pkg/brokers/pubsub"
 	"github.com/Octops/agones-event-broadcaster/pkg/brokers/stdout"
 	"google.golang.org/api/option"
-	"os"
-	"time"
 
 	"github.com/Octops/agones-event-broadcaster/pkg/broadcaster"
 	"github.com/Octops/agones-event-broadcaster/pkg/brokers"
@@ -54,6 +55,9 @@ var rootCmd = &cobra.Command{
 		}
 
 		clientConf, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+		if err != nil {
+			logrus.WithError(err).Fatalf("error reading kubeconfig: %s", kubeconfig)
+		}
 
 		broker := BuildBroker(brokerFlag)
 
