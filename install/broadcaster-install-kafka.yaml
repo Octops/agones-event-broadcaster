@@ -56,7 +56,7 @@ spec:
       serviceAccountName: agones-events-controller
       containers:
         - name: agones-events-controller
-          image: "octops/agones-event-broadcaster:0.3.0"
+          image: "octops/agones-event-broadcaster:0.3.1"
           args:
             - --broker
             - kafka
