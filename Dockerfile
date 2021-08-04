@@ -6,7 +6,7 @@ COPY . .
 
 RUN make build
 
-FROM alpine
+FROM debian:buster-slim
 
 WORKDIR /app
 

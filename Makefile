@@ -41,11 +41,14 @@ default: clean build
 build: clean $(BROADCASTER_BIN)
 
 $(BROADCASTER_BIN):
-	CGO_ENABLED=0 GOOS=linux go build -ldflags '$(LDFLAGS)' -a -installsuffix cgo -o $(BROADCASTER_BIN) .
+	# The Kafka client does not support cross-platform compilation. To be fixed in the future.
+	go build -ldflags '$(LDFLAGS)' -a -installsuffix cgo -o $(BROADCASTER_BIN) .
 
 dist:
-	CGO_ENABLED=0 GOOS=linux go build -ldflags '$(LDFLAGS)' -a -installsuffix cgo -o $(BROADCASTER_BIN) .
-	CGO_ENABLED=0 GOOS=darwin go build -ldflags '$(LDFLAGS)' -a -installsuffix cgo -o $(BROADCASTER_BIN)-darwin .
+	# The Kafka client does not support cross-platform compilation. To be fixed in the future.
+	go build -ldflags '$(LDFLAGS)' -a -installsuffix cgo -o $(BROADCASTER_BIN) .
+	#CGO_ENABLED=0 GOOS=linux go build -ldflags '$(LDFLAGS)' -a -installsuffix cgo -o $(BROADCASTER_BIN) .
+	#CGO_ENABLED=0 GOOS=darwin go build -ldflags '$(LDFLAGS)' -a -installsuffix cgo -o $(BROADCASTER_BIN)-darwin .
 	#CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags '$(LDFLAGS)' -a -installsuffix cgo -o $(BROADCASTER_BIN).exe $(PKG_NAME)/cmd/controller/
 	#CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -ldflags '$(LDFLAGS)' -a -installsuffix cgo -o $(BROADCASTER_BIN)-armhf $(PKG_NAME)/cmd/controller/
 	#CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags '$(LDFLAGS)' -a -installsuffix cgo -o $(BROADCASTER_BIN)-arm64 $(PKG_NAME)/cmd/controller/
