@@ -5,6 +5,7 @@ go 1.16
 require (
 	agones.dev/agones v1.15.0
 	cloud.google.com/go/pubsub v1.2.0
+	github.com/confluentinc/confluent-kafka-go v1.7.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.7.0
