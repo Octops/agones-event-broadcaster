@@ -2,12 +2,15 @@ package main
 
 import (
 	v1 "agones.dev/agones/pkg/apis/agones/v1"
+	"context"
 	"github.com/Octops/agones-event-broadcaster/pkg/broadcaster"
 	"github.com/Octops/agones-event-broadcaster/pkg/brokers/pubsub"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/api/option"
 	"k8s.io/client-go/tools/clientcmd"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -45,7 +48,10 @@ func main() {
 		logrus.WithError(err).Fatal("error creating broadcaster")
 	}
 
-	if err := gsBroadcaster.Start(); err != nil {
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	if err := gsBroadcaster.Start(ctx); err != nil {
 		logrus.WithError(err).Fatal("error starting broadcaster")
 	}
 }

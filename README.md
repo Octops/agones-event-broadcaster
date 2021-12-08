@@ -301,13 +301,16 @@ import broker ..../brokers/kafka
 broker := broker.NewKafkaBroker(&broker.Config{})
 gsBroadcaster := broadcaster.New(cfg, broker, 15*time.Second)
 gsBroadcaster.WithWatcherFor(&v1.GameServer{})
+
 if err := gsBroadcaster.Build(); err != nil {
     logrus.WithError(err).Fatal("error creating broadcaster")
 }
 
 ...
 
-if err := gsBroadcaster.Start(); err != nil {
+ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+defer stop()
+if err := gsBroadcaster.Start(ctx); err != nil {
     logrus.WithError(err).Fatal("error starting broadcaster")
 }
 
@@ -325,7 +328,9 @@ if err := gsBroadcaster.Build(); err != nil {
 
 ...
 
-if err := gsBroadcaster.Start(); err != nil {
+ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+defer stop()
+if err := gsBroadcaster.Start(ctx); err != nil {
     logrus.WithError(err).Fatal("error starting broadcaster")
 }
 ```
