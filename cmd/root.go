@@ -18,6 +18,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"time"
 
 	v1 "agones.dev/agones/pkg/apis/agones/v1"
@@ -72,7 +73,8 @@ var rootCmd = &cobra.Command{
 			logrus.WithError(err).Fatal("error creating broadcaster")
 		}
 
-		if err := bc.Start(); err != nil {
+		ctx := ctrl.SetupSignalHandler()
+		if err := bc.Start(ctx); err != nil {
 			logrus.WithError(err).Fatal("error starting broadcaster")
 		}
 	},

@@ -1,6 +1,7 @@
 package broadcaster
 
 import (
+	"context"
 	"github.com/Octops/agones-event-broadcaster/pkg/brokers"
 	"github.com/Octops/agones-event-broadcaster/pkg/controller"
 	"github.com/Octops/agones-event-broadcaster/pkg/events"
@@ -10,7 +11,6 @@ import (
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
 )
@@ -88,9 +88,8 @@ func (b *Broadcaster) Build() error {
 }
 
 // Start run the controller that sends events back to the broadcaster event handlers
-func (b *Broadcaster) Start() error {
+func (b *Broadcaster) Start(ctx context.Context) error {
 	b.logger.Info("starting broadcaster")
-	ctx := ctrl.SetupSignalHandler()
 	if err := b.Manager.Start(ctx); err != nil {
 		b.logger.Fatal(errors.Wrap(err, "broadcaster could not start"))
 	}
