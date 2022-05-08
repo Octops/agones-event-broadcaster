@@ -1,4 +1,4 @@
-FROM golang:1.16 AS builder
+FROM golang:1.17 AS builder
 
 WORKDIR /go/src/github.com/Octops/agones-event-broadcaster
 
@@ -6,7 +6,7 @@ COPY . .
 
 RUN make build
 
-FROM debian:buster-slim
+FROM debian:bookworm-slim
 
 WORKDIR /app
 
