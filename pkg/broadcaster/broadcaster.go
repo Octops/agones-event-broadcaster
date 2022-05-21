@@ -56,6 +56,10 @@ func New(config *rest.Config, broker brokers.Broker, syncPeriod time.Duration, s
 // OnAdd, OnUpdate and OnDelete associated to that particular resource type.
 // Examples of obj arguments are: &v1.GameServer and &v1.Fleet
 func (b *Broadcaster) WithWatcherFor(obj client.Object) *Broadcaster {
+	if b.error != nil {
+		return b
+	}
+
 	ctrlFor, err := controller.NewAgonesController(b.Manager, b, controller.Options{
 		For:  obj,
 		Owns: &corev1.Pod{},
