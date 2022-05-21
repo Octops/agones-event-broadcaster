@@ -44,7 +44,7 @@ func New(config *rest.Config, broker brokers.Broker, syncPeriod time.Duration, s
 
 	if err != nil {
 		broadcaster.error = errors.Wrap(err, "error creating manager")
-		return nil
+		return broadcaster
 	}
 
 	broadcaster.Manager = mgr
