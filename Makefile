@@ -36,6 +36,7 @@ BROADCASTER_BIN := bin/broadcaster
 
 DOCKER_IMAGE_REPO ?= octops/agones-event-broadcaster
 DOCKER_IMAGE_TAG ?= octops/agones-event-broadcaster:${VERSION}
+TAG_VERSION = 0.3.6
 
 default: clean build
 
@@ -97,9 +98,13 @@ docker:
 push: docker
 	docker push $(DOCKER_IMAGE_TAG)
 
-release: push
+latest: push
 	docker tag $(DOCKER_IMAGE_TAG) $(DOCKER_IMAGE_REPO):latest
 	docker push $(DOCKER_IMAGE_REPO):latest
+
+release: push
+	docker tag $(DOCKER_IMAGE_TAG) $(DOCKER_IMAGE_REPO):$(TAG_VERSION)
+	docker push $(DOCKER_IMAGE_REPO):$(TAG_VERSION)
 
 install:
 	kubectl apply -f install/broadcaster-install.yaml
