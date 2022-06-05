@@ -76,15 +76,13 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 					},
 				}
 
-				//TODO: Investigate if controller require this Done. Keeping doubles the reconcile calls
-				//defer limitingInterface.Done(request)
-
 				if err := eventHandler.OnAdd(createEvent.Object); err != nil {
 					limitingInterface.AddRateLimited(request)
 					return
 				}
 
 				limitingInterface.Forget(request)
+				limitingInterface.Done(request)
 			},
 			UpdateFunc: func(updateEvent event.UpdateEvent, limitingInterface workqueue.RateLimitingInterface) {
 				request := reconcile.Request{
@@ -94,15 +92,13 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 					},
 				}
 
-				//TODO: Investigate if controller require this Done. Keeping doubles the reconcile calls
-				//defer limitingInterface.Done(request)
-
 				if err := eventHandler.OnUpdate(updateEvent.ObjectOld, updateEvent.ObjectNew); err != nil {
 					limitingInterface.AddRateLimited(request)
 					return
 				}
 
 				limitingInterface.Forget(request)
+				limitingInterface.Done(request)
 			},
 			DeleteFunc: func(deleteEvent event.DeleteEvent, limitingInterface workqueue.RateLimitingInterface) {
 
@@ -119,6 +115,7 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 				}
 
 				limitingInterface.Forget(request)
+				limitingInterface.Done(request)
 			},
 		}).
 		Complete(&Reconciler{
