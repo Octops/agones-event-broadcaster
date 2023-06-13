@@ -226,8 +226,8 @@ $ kubectl delete -f install/broadcaster-install.yaml
 The steps below provide the instructions for running the broadcaster on your local laptop. We will be using the `stdout ` broker. That means messages will not be published to any remote service. 
 
 Requirements:
- - Kubernetes Cluster 1.14+
- - Agones 1.6+ 
+ - Kubernetes Cluster 1.27+
+ - Agones 1.32+ 
  - Kubeconfig
 
 Running
