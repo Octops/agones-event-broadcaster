@@ -2,8 +2,10 @@ package stdout
 
 import (
 	"encoding/json"
-	"github.com/Octops/agones-event-broadcaster/pkg/events"
+
 	"github.com/sirupsen/logrus"
+
+	"github.com/Octops/agones-event-broadcaster/pkg/events"
 )
 
 // StdoutBroker is a log based broker that doesn't publish to any remove message service.

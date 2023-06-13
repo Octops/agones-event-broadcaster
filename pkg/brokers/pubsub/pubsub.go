@@ -1,13 +1,15 @@
 package pubsub
 
 import (
-	"cloud.google.com/go/pubsub"
 	"context"
 	"fmt"
-	"github.com/Octops/agones-event-broadcaster/pkg/brokers"
-	"github.com/Octops/agones-event-broadcaster/pkg/events"
+
+	"cloud.google.com/go/pubsub"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/api/option"
+
+	"github.com/Octops/agones-event-broadcaster/pkg/brokers"
+	"github.com/Octops/agones-event-broadcaster/pkg/events"
 )
 
 const (

@@ -2,21 +2,24 @@ package controller
 
 import (
 	"context"
-	"github.com/Octops/agones-event-broadcaster/pkg/events/handlers"
-	"github.com/Octops/agones-event-broadcaster/pkg/runtime/log"
+	"reflect"
+	"time"
+
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
-	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	ctrl_options "sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
+
+	"github.com/Octops/agones-event-broadcaster/pkg/events/handlers"
+	"github.com/Octops/agones-event-broadcaster/pkg/runtime/log"
 )
 
 type Options struct {
@@ -46,8 +49,13 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 		"controller_type": optFor,
 	})
 
+	recoverPanic := true
 	err := ctrl.NewControllerManagedBy(mgr).
 		For(options.For).
+		WithOptions(ctrl_options.Options{
+			CacheSyncTimeout: time.Minute * 5,
+			RecoverPanic:     &recoverPanic,
+		}).
 		//Owns(options.Owns). //TODO: Assigning Owns duplicates the number of reconcile calls.
 		WithEventFilter(predicate.Funcs{
 			CreateFunc: func(event event.CreateEvent) bool {
@@ -65,8 +73,8 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 				return true
 			},
 		}).
-		Watches(&source.Kind{Type: options.For}, &handler.Funcs{
-			CreateFunc: func(createEvent event.CreateEvent, limitingInterface workqueue.RateLimitingInterface) {
+		Watches(options.For, &handler.Funcs{
+			CreateFunc: func(ctx context.Context, createEvent event.CreateEvent, limitingInterface workqueue.RateLimitingInterface) {
 				// OnAdd is triggered only when the controller is syncing its cache.
 				// It does not map ot the resource creation event triggered by Kubernetes
 				request := reconcile.Request{
@@ -77,6 +85,7 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 				}
 
 				if err := eventHandler.OnAdd(createEvent.Object); err != nil {
+					logger.WithError(err).Errorf("failed to handle onAdd %s/%s, putting back on the queue", createEvent.Object.GetNamespace(), createEvent.Object.GetName())
 					limitingInterface.AddRateLimited(request)
 					return
 				}
@@ -84,7 +93,7 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 				limitingInterface.Forget(request)
 				limitingInterface.Done(request)
 			},
-			UpdateFunc: func(updateEvent event.UpdateEvent, limitingInterface workqueue.RateLimitingInterface) {
+			UpdateFunc: func(ctx context.Context, updateEvent event.UpdateEvent, limitingInterface workqueue.RateLimitingInterface) {
 				request := reconcile.Request{
 					NamespacedName: types.NamespacedName{
 						Namespace: updateEvent.ObjectNew.GetNamespace(),
@@ -93,6 +102,7 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 				}
 
 				if err := eventHandler.OnUpdate(updateEvent.ObjectOld, updateEvent.ObjectNew); err != nil {
+					logger.WithError(err).Errorf("failed to handle onUpdate %s/%s, putting back on the queue", updateEvent.ObjectNew.GetNamespace(), updateEvent.ObjectNew.GetName())
 					limitingInterface.AddRateLimited(request)
 					return
 				}
@@ -100,7 +110,7 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 				limitingInterface.Forget(request)
 				limitingInterface.Done(request)
 			},
-			DeleteFunc: func(deleteEvent event.DeleteEvent, limitingInterface workqueue.RateLimitingInterface) {
+			DeleteFunc: func(ctx context.Context, deleteEvent event.DeleteEvent, limitingInterface workqueue.RateLimitingInterface) {
 
 				request := reconcile.Request{
 					NamespacedName: types.NamespacedName{
@@ -110,6 +120,7 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 				}
 
 				if err := eventHandler.OnDelete(deleteEvent.Object); err != nil {
+					logger.WithError(err).Errorf("failed to handle onDelete %s/%s, putting back on the queue", deleteEvent.Object.GetNamespace(), deleteEvent.Object.GetName())
 					limitingInterface.AddRateLimited(request)
 					return
 				}

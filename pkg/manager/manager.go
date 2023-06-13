@@ -2,10 +2,11 @@ package manager
 
 import (
 	"context"
+	"time"
+
 	"github.com/pkg/errors"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"time"
 )
 
 type Options struct {
