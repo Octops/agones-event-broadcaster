@@ -80,6 +80,7 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 				}
 
 				if err := eventHandler.OnAdd(createEvent.Object); err != nil {
+					logger.WithError(err).Errorf("failed to handle onAdd %s/%s, putting back on the queue", createEvent.Object.GetNamespace(), createEvent.Object.GetName())
 					limitingInterface.AddRateLimited(request)
 					return
 				}
@@ -96,6 +97,7 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 				}
 
 				if err := eventHandler.OnUpdate(updateEvent.ObjectOld, updateEvent.ObjectNew); err != nil {
+					logger.WithError(err).Errorf("failed to handle onUpdate %s/%s, putting back on the queue", updateEvent.ObjectNew.GetNamespace(), updateEvent.ObjectNew.GetName())
 					limitingInterface.AddRateLimited(request)
 					return
 				}
@@ -113,6 +115,7 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 				}
 
 				if err := eventHandler.OnDelete(deleteEvent.Object); err != nil {
+					logger.WithError(err).Errorf("failed to handle onDelete %s/%s, putting back on the queue", deleteEvent.Object.GetNamespace(), deleteEvent.Object.GetName())
 					limitingInterface.AddRateLimited(request)
 					return
 				}
