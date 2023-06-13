@@ -2,17 +2,19 @@ package broadcaster
 
 import (
 	"context"
-	"github.com/Octops/agones-event-broadcaster/pkg/brokers"
-	"github.com/Octops/agones-event-broadcaster/pkg/controller"
-	"github.com/Octops/agones-event-broadcaster/pkg/events"
-	"github.com/Octops/agones-event-broadcaster/pkg/manager"
-	"github.com/Octops/agones-event-broadcaster/pkg/runtime/log"
+	"time"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
+
+	"github.com/Octops/agones-event-broadcaster/pkg/brokers"
+	"github.com/Octops/agones-event-broadcaster/pkg/controller"
+	"github.com/Octops/agones-event-broadcaster/pkg/events"
+	"github.com/Octops/agones-event-broadcaster/pkg/manager"
+	"github.com/Octops/agones-event-broadcaster/pkg/runtime/log"
 )
 
 // Broadcaster receives events (Add, Update and Delete) sent by the controller

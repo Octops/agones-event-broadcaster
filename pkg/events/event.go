@@ -1,8 +1,9 @@
 package events
 
 import (
-	"k8s.io/apimachinery/pkg/runtime"
 	"reflect"
+
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 var (

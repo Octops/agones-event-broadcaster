@@ -3,9 +3,10 @@ package kafka
 import (
 	"fmt"
 
-	"github.com/Octops/agones-event-broadcaster/pkg/events"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/sirupsen/logrus"
+
+	"github.com/Octops/agones-event-broadcaster/pkg/events"
 )
 
 type KafkaBroker struct {
