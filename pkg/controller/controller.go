@@ -49,8 +49,13 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 		"controller_type": optFor,
 	})
 
+	recoverPanic := true
 	err := ctrl.NewControllerManagedBy(mgr).
 		For(options.For).
+		WithOptions(ctrl_options.Options{
+			CacheSyncTimeout: time.Minute * 5,
+			RecoverPanic:     &recoverPanic,
+		}).
 		//Owns(options.Owns). //TODO: Assigning Owns duplicates the number of reconcile calls.
 		WithEventFilter(predicate.Funcs{
 			CreateFunc: func(event event.CreateEvent) bool {
@@ -68,8 +73,8 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 				return true
 			},
 		}).
-		Watches(&source.Kind{Type: options.For}, &handler.Funcs{
-			CreateFunc: func(createEvent event.CreateEvent, limitingInterface workqueue.RateLimitingInterface) {
+		Watches(options.For, &handler.Funcs{
+			CreateFunc: func(ctx context.Context, createEvent event.CreateEvent, limitingInterface workqueue.RateLimitingInterface) {
 				// OnAdd is triggered only when the controller is syncing its cache.
 				// It does not map ot the resource creation event triggered by Kubernetes
 				request := reconcile.Request{
@@ -88,7 +93,7 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 				limitingInterface.Forget(request)
 				limitingInterface.Done(request)
 			},
-			UpdateFunc: func(updateEvent event.UpdateEvent, limitingInterface workqueue.RateLimitingInterface) {
+			UpdateFunc: func(ctx context.Context, updateEvent event.UpdateEvent, limitingInterface workqueue.RateLimitingInterface) {
 				request := reconcile.Request{
 					NamespacedName: types.NamespacedName{
 						Namespace: updateEvent.ObjectNew.GetNamespace(),
@@ -105,7 +110,7 @@ func NewAgonesController(mgr manager.Manager, eventHandler handlers.EventHandler
 				limitingInterface.Forget(request)
 				limitingInterface.Done(request)
 			},
-			DeleteFunc: func(deleteEvent event.DeleteEvent, limitingInterface workqueue.RateLimitingInterface) {
+			DeleteFunc: func(ctx context.Context, deleteEvent event.DeleteEvent, limitingInterface workqueue.RateLimitingInterface) {
 
 				request := reconcile.Request{
 					NamespacedName: types.NamespacedName{
