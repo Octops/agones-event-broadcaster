@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
+
 	"github.com/pkg/errors"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
@@ -25,7 +27,9 @@ func New(config *rest.Config, options Options) (*Manager, error) {
 		Cache: cache.Options{
 			SyncPeriod: options.SyncPeriod,
 		},
-		MetricsBindAddress: options.MetricsBindAddress,
+		Metrics: server.Options{
+			BindAddress: options.MetricsBindAddress,
+		},
 	})
 
 	if err != nil {

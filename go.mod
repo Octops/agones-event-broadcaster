@@ -3,7 +3,7 @@ module github.com/Octops/agones-event-broadcaster
 go 1.20
 
 require (
-	agones.dev/agones v1.32.0
+	agones.dev/agones v1.33.0
 	cloud.google.com/go/pubsub v1.30.0
 	github.com/confluentinc/confluent-kafka-go v1.7.0
 	github.com/mitchellh/go-homedir v1.1.0
