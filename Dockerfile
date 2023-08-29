@@ -6,7 +6,7 @@ COPY . .
 
 RUN make build
 
-FROM debian:bookworm-slim
+FROM gcr.io/distroless/static:nonroot
 
 WORKDIR /app
 

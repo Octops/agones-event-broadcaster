@@ -30,6 +30,7 @@ func main() {
 	if err != nil {
 		logrus.Fatalf("Error building kubeconfig: %s", err.Error())
 	}
+	cfg.Timeout = time.Minute * 5
 
 	ctx := context.Background()
 

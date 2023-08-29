@@ -6,6 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
@@ -21,8 +22,9 @@ type Manager struct {
 
 func New(config *rest.Config, options Options) (*Manager, error) {
 	mgr, err := manager.New(config, manager.Options{
-		SyncPeriod:         options.SyncPeriod,
-		Port:               options.ServerPort,
+		Cache: cache.Options{
+			SyncPeriod: options.SyncPeriod,
+		},
 		MetricsBindAddress: options.MetricsBindAddress,
 	})
 
