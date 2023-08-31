@@ -4,12 +4,13 @@ import (
 	"context"
 	"time"
 
-	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
-
 	"github.com/pkg/errors"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 )
 
 type Options struct {
@@ -40,5 +41,6 @@ func New(config *rest.Config, options Options) (*Manager, error) {
 }
 
 func (m *Manager) Start(ctx context.Context) error {
+	log.SetLogger(zap.New())
 	return m.Manager.Start(ctx)
 }
