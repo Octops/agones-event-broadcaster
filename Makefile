@@ -36,7 +36,7 @@ BROADCASTER_BIN := bin/broadcaster
 
 DOCKER_IMAGE_REPO ?= octops/agones-event-broadcaster
 DOCKER_IMAGE_TAG ?= octops/agones-event-broadcaster:${VERSION}
-TAG_VERSION = 0.4.0
+TAG_VERSION = 0.4.1
 
 default: clean build
 
