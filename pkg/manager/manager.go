@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"sigs.k8s.io/controller-runtime/pkg/config"
+
 	"github.com/pkg/errors"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
@@ -14,22 +16,26 @@ import (
 )
 
 type Options struct {
-	SyncPeriod         *time.Duration
-	ServerPort         int
-	MetricsBindAddress string
+	SyncPeriod             *time.Duration
+	ServerPort             int
+	MetricsBindAddress     string
+	MaxConcurrentReconcile int
 }
 
 type Manager struct {
 	manager.Manager
 }
 
-func New(config *rest.Config, options Options) (*Manager, error) {
-	mgr, err := manager.New(config, manager.Options{
+func New(clientConf *rest.Config, options Options) (*Manager, error) {
+	mgr, err := manager.New(clientConf, manager.Options{
 		Cache: cache.Options{
 			SyncPeriod: options.SyncPeriod,
 		},
 		Metrics: server.Options{
 			BindAddress: options.MetricsBindAddress,
+		},
+		Controller: config.Controller{
+			MaxConcurrentReconciles: options.MaxConcurrentReconcile,
 		},
 	})
 
