@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,23 +18,22 @@ package cmd
 import (
 	"fmt"
 	"os"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"time"
 
 	v1 "agones.dev/agones/pkg/apis/agones/v1"
-	"github.com/Octops/agones-event-broadcaster/pkg/brokers/kafka"
-	"github.com/Octops/agones-event-broadcaster/pkg/brokers/pubsub"
-	"github.com/Octops/agones-event-broadcaster/pkg/brokers/stdout"
+	homedir "github.com/mitchellh/go-homedir"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"google.golang.org/api/option"
+	"k8s.io/client-go/tools/clientcmd"
+	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/Octops/agones-event-broadcaster/pkg/broadcaster"
 	"github.com/Octops/agones-event-broadcaster/pkg/brokers"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
-	"k8s.io/client-go/tools/clientcmd"
-
-	homedir "github.com/mitchellh/go-homedir"
-	"github.com/spf13/viper"
+	"github.com/Octops/agones-event-broadcaster/pkg/brokers/kafka"
+	"github.com/Octops/agones-event-broadcaster/pkg/brokers/pubsub"
+	"github.com/Octops/agones-event-broadcaster/pkg/brokers/stdout"
 )
 
 var (
@@ -52,6 +51,7 @@ var rootCmd = &cobra.Command{
 	Short: "Broadcast Events from Agones GameServers",
 	Long:  `Broadcast Events from Agones GameServers`,
 	Run: func(cmd *cobra.Command, args []string) {
+		logrus.SetFormatter(&logrus.JSONFormatter{})
 		if verbose {
 			logrus.SetLevel(logrus.DebugLevel)
 		}
