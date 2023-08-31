@@ -5,8 +5,9 @@ import "github.com/sirupsen/logrus"
 var logger *logrus.Entry
 
 func init() {
-	logrus.SetFormatter(&logrus.JSONFormatter{})
-	logger = logrus.NewEntry(logrus.New())
+	log := logrus.New()
+	log.SetFormatter(&logrus.JSONFormatter{})
+	logger = logrus.NewEntry(log)
 }
 
 func NewLoggerWithField(key, value string) *logrus.Entry {
