@@ -27,10 +27,17 @@ type Broadcaster struct {
 	Manager *manager.Manager
 }
 
+type Config struct {
+	SyncPeriod             time.Duration
+	ServerPort             int
+	MetricsBindAddress     string
+	MaxConcurrentReconcile int
+}
+
 // New returns a new GameServer broadcaster
 // It required a config to be passed to the GameServer controller
 // and a broker that will be publishing messages
-func New(config *rest.Config, broker brokers.Broker, syncPeriod time.Duration, serverPort int, metricsBindAddress string) *Broadcaster {
+func New(clientConfig *rest.Config, broker brokers.Broker, config *Config) *Broadcaster {
 	logger := log.NewLoggerWithField("source", "broadcaster")
 
 	broadcaster := &Broadcaster{
@@ -38,10 +45,11 @@ func New(config *rest.Config, broker brokers.Broker, syncPeriod time.Duration, s
 		Broker: broker,
 	}
 
-	mgr, err := manager.New(config, manager.Options{
-		SyncPeriod:         &syncPeriod,
-		ServerPort:         serverPort,
-		MetricsBindAddress: metricsBindAddress,
+	mgr, err := manager.New(clientConfig, manager.Options{
+		SyncPeriod:             &config.SyncPeriod,
+		ServerPort:             config.ServerPort,
+		MetricsBindAddress:     config.MetricsBindAddress,
+		MaxConcurrentReconcile: config.MaxConcurrentReconcile,
 	})
 
 	if err != nil {
