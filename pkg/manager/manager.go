@@ -20,6 +20,7 @@ type Options struct {
 	ServerPort             int
 	MetricsBindAddress     string
 	MaxConcurrentReconcile int
+	HealthProbeBindAddress string
 }
 
 type Manager struct {
@@ -37,12 +38,12 @@ func New(clientConf *rest.Config, options Options) (*Manager, error) {
 		Controller: config.Controller{
 			MaxConcurrentReconciles: options.MaxConcurrentReconcile,
 		},
+		HealthProbeBindAddress: options.HealthProbeBindAddress,
 	})
 
 	if err != nil {
 		return nil, errors.Wrap(err, "manager could not be created")
 	}
-
 	return &Manager{mgr}, nil
 }
 

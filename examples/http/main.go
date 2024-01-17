@@ -1,16 +1,17 @@
 package main
 
 import (
-	v1 "agones.dev/agones/pkg/apis/agones/v1"
 	"context"
 	"flag"
-	"github.com/Octops/agones-event-broadcaster/pkg/broadcaster"
-	"github.com/sirupsen/logrus"
-	"k8s.io/client-go/tools/clientcmd"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	v1 "agones.dev/agones/pkg/apis/agones/v1"
+	"github.com/Octops/agones-event-broadcaster/pkg/broadcaster"
+	"github.com/sirupsen/logrus"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 var (
@@ -53,8 +54,14 @@ func main() {
 
 	broker := NewHTTPBroker(addr)
 	broker.Start(ctx)
-
-	gsBroadcaster := broadcaster.New(cfg, broker, 15*time.Second, 8090, "0.0.0.0:8095")
+	opts := &broadcaster.Config{
+		SyncPeriod:             15*time.Second,
+		ServerPort:             8090,
+		MetricsBindAddress:     "0.0.0.0:8095",
+		MaxConcurrentReconcile: 5,
+		HealthProbeBindAddress: "0.0.0.0:8099",
+	}
+	gsBroadcaster := broadcaster.New(cfg, broker, opts)
 	gsBroadcaster.WithWatcherFor(&v1.GameServer{})
 	if err := gsBroadcaster.Build(); err != nil {
 		logrus.WithError(err).Fatal("error creating broadcaster")

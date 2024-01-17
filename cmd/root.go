@@ -44,6 +44,7 @@ var (
 	syncPeriod              string
 	port                    int
 	metricsBindAddress      string
+	healthProbeBindAddress  string
 	maxConcurrencyReconcile int
 )
 
@@ -73,6 +74,7 @@ var rootCmd = &cobra.Command{
 			ServerPort:             port,
 			MetricsBindAddress:     metricsBindAddress,
 			MaxConcurrentReconcile: 4,
+			HealthProbeBindAddress: healthProbeBindAddress,
 		}
 		bc := broadcaster.New(clientConf, broker, opts)
 
@@ -143,6 +145,7 @@ func init() {
 	rootCmd.Flags().IntVarP(&port, "port", "p", 8089, "Port used by the broadcaster to communicate via http")
 	rootCmd.Flags().StringVar(&metricsBindAddress, "metrics-bind-address", "0.0.0.0:8095", "The TCP address that the controller should bind to for serving prometheus metrics")
 	rootCmd.Flags().IntVar(&maxConcurrencyReconcile, "max-concurrency", 5, "Maximum number of concurrent Reconciles which can be run")
+	rootCmd.Flags().StringVar(&healthProbeBindAddress, "health-probe-bind-address", "0.0.0:8099", "The TCP address that the controller should bind to for serving health probes")
 }
 
 // initConfig reads in config file and ENV variables if set.
