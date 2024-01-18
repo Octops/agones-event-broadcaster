@@ -32,6 +32,7 @@ type Config struct {
 	ServerPort             int
 	MetricsBindAddress     string
 	MaxConcurrentReconcile int
+	HealthProbeBindAddress string
 }
 
 // New returns a new GameServer broadcaster
@@ -50,6 +51,7 @@ func New(clientConfig *rest.Config, broker brokers.Broker, config *Config) *Broa
 		ServerPort:             config.ServerPort,
 		MetricsBindAddress:     config.MetricsBindAddress,
 		MaxConcurrentReconcile: config.MaxConcurrentReconcile,
+		HealthProbeBindAddress: config.HealthProbeBindAddress,
 	})
 
 	if err != nil {
